@@ -1,7 +1,7 @@
 import { getParsedCommandLineOfConfigFile } from '../bundled-typescript/bundled-typescript';
 import type { CompilerOptions } from '../bundled-typescript/bundled-typescript';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { clearTsconfigCache } from './read-tsconfig';
 
 // TypeScript's parse reads the disk through `ts.sys`, so it is staged by the exact config path. A staged config

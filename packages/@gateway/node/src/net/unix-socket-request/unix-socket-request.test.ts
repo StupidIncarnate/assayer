@@ -8,10 +8,10 @@ describe('unixSocketRequest', () => {
   describe('a peer that answers', () => {
     it('VALID: {respondsWith} => resolves the line the peer wrote back', async () => {
       const proxy = unixSocketRequestProxy();
-      proxy.respondsWith({ socketPath: '/tmp/dm-sock/echo.sock', line: 'echo:ping' });
+      proxy.respondsWith({ socketPath: '/tmp/lk-sock/echo.sock', line: 'echo:ping' });
 
       const response = await unixSocketRequest({
-        socketPath: '/tmp/dm-sock/echo.sock',
+        socketPath: '/tmp/lk-sock/echo.sock',
         requestLine: 'ping',
         timeoutMs: 2000,
       });
@@ -21,20 +21,20 @@ describe('unixSocketRequest', () => {
 
     it('VALID: {two requests to one socket} => getRequestLinesFor reads back each line in order', async () => {
       const proxy = unixSocketRequestProxy();
-      proxy.respondsWith({ socketPath: '/tmp/dm-sock/echo.sock', line: '{"ok":true}' });
+      proxy.respondsWith({ socketPath: '/tmp/lk-sock/echo.sock', line: '{"ok":true}' });
 
       await unixSocketRequest({
-        socketPath: '/tmp/dm-sock/echo.sock',
+        socketPath: '/tmp/lk-sock/echo.sock',
         requestLine: '{"kind":"ping"}',
         timeoutMs: 2000,
       });
       await unixSocketRequest({
-        socketPath: '/tmp/dm-sock/echo.sock',
+        socketPath: '/tmp/lk-sock/echo.sock',
         requestLine: '{"kind":"kill"}',
         timeoutMs: 2000,
       });
 
-      expect(proxy.getRequestLinesFor({ socketPath: '/tmp/dm-sock/echo.sock' })).toStrictEqual([
+      expect(proxy.getRequestLinesFor({ socketPath: '/tmp/lk-sock/echo.sock' })).toStrictEqual([
         '{"kind":"ping"}',
         '{"kind":"kill"}',
       ]);
@@ -42,17 +42,17 @@ describe('unixSocketRequest', () => {
 
     it('VALID: {two sockets staged apart} => each socket answers its own line', async () => {
       const proxy = unixSocketRequestProxy();
-      proxy.respondsWith({ socketPath: '/tmp/dm-sock/a.sock', line: 'from-a' });
-      proxy.respondsWith({ socketPath: '/tmp/dm-sock/b.sock', line: 'from-b' });
+      proxy.respondsWith({ socketPath: '/tmp/lk-sock/a.sock', line: 'from-a' });
+      proxy.respondsWith({ socketPath: '/tmp/lk-sock/b.sock', line: 'from-b' });
 
       const b = await unixSocketRequest({
-        socketPath: '/tmp/dm-sock/b.sock',
+        socketPath: '/tmp/lk-sock/b.sock',
         requestLine: 'ping',
         timeoutMs: 2000,
       });
 
       expect(b).toBe('from-b');
-      expect(proxy.getRequestLinesFor({ socketPath: '/tmp/dm-sock/a.sock' })).toStrictEqual([]);
+      expect(proxy.getRequestLinesFor({ socketPath: '/tmp/lk-sock/a.sock' })).toStrictEqual([]);
     });
   });
 
@@ -61,13 +61,13 @@ describe('unixSocketRequest', () => {
       const proxy = unixSocketRequestProxy();
       const error = UnixSocketRecordedErrorStub({
         code: 'ENOENT',
-        socketPath: '/tmp/dm-sock/missing.sock',
+        socketPath: '/tmp/lk-sock/missing.sock',
       });
-      proxy.rejects({ socketPath: '/tmp/dm-sock/missing.sock', error });
+      proxy.rejects({ socketPath: '/tmp/lk-sock/missing.sock', error });
 
       await expect(
         unixSocketRequest({
-          socketPath: '/tmp/dm-sock/missing.sock',
+          socketPath: '/tmp/lk-sock/missing.sock',
           requestLine: 'ping',
           timeoutMs: 2000,
         }),
@@ -78,35 +78,35 @@ describe('unixSocketRequest', () => {
       const proxy = unixSocketRequestProxy();
       const error = UnixSocketRecordedErrorStub({
         code: 'ECONNREFUSED',
-        socketPath: '/tmp/dm-sock/stale.sock',
+        socketPath: '/tmp/lk-sock/stale.sock',
       });
-      proxy.rejects({ socketPath: '/tmp/dm-sock/stale.sock', error });
+      proxy.rejects({ socketPath: '/tmp/lk-sock/stale.sock', error });
 
       const caught: unknown = await unixSocketRequest({
-        socketPath: '/tmp/dm-sock/stale.sock',
+        socketPath: '/tmp/lk-sock/stale.sock',
         requestLine: 'ping',
         timeoutMs: 2000,
       }).catch((rejection: unknown) => rejection);
 
       expect({
         caught,
-        lines: proxy.getRequestLinesFor({ socketPath: '/tmp/dm-sock/stale.sock' }),
-        connections: proxy.getConnectionCountFor({ socketPath: '/tmp/dm-sock/stale.sock' }),
+        lines: proxy.getRequestLinesFor({ socketPath: '/tmp/lk-sock/stale.sock' }),
+        connections: proxy.getConnectionCountFor({ socketPath: '/tmp/lk-sock/stale.sock' }),
       }).toStrictEqual({ caught: error, lines: [], connections: 1 });
     });
 
     it('ERROR: {peer never answers} => rejects with a timeout message after timeoutMs', async () => {
       const proxy = unixSocketRequestProxy();
-      proxy.neverResponds({ socketPath: '/tmp/dm-sock/silent.sock' });
+      proxy.neverResponds({ socketPath: '/tmp/lk-sock/silent.sock' });
 
       await expect(
         unixSocketRequest({
-          socketPath: '/tmp/dm-sock/silent.sock',
+          socketPath: '/tmp/lk-sock/silent.sock',
           requestLine: 'ping',
           timeoutMs: 50,
         }),
-      ).rejects.toThrow(/^Socket request to \/tmp\/dm-sock\/silent\.sock timed out after 50ms$/u);
-      expect(proxy.getRequestLinesFor({ socketPath: '/tmp/dm-sock/silent.sock' })).toStrictEqual([
+      ).rejects.toThrow(/^Socket request to \/tmp\/lk-sock\/silent\.sock timed out after 50ms$/u);
+      expect(proxy.getRequestLinesFor({ socketPath: '/tmp/lk-sock/silent.sock' })).toStrictEqual([
         'ping',
       ]);
     });

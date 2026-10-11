@@ -1,6 +1,6 @@
 import { resolveModuleName } from '../bundled-typescript/bundled-typescript';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { ResolvedModuleStub } from './resolved-module.stub';
 
 // `resolveModuleName` takes (specifier, containingFile, options, host). A stage names the specifier,

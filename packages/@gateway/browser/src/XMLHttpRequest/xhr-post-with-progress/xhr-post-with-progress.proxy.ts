@@ -1,4 +1,4 @@
-import { StartEndpointMock } from '@dungeonmaster/testing';
+import { StartEndpointMock } from '@legendscribe/lockdown-kit-testing';
 
 // Stages through MSW's XHR interceptor, the same mechanism the fetch proxies use for `fetch`, so a
 // file mixing both stays on one staging path. MSW itself emits the upload `progress` event, with

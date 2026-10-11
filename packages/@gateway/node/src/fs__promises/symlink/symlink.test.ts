@@ -7,13 +7,13 @@ describe('symlink', () => {
     const proxy = symlinkProxy();
     proxy.succeeds({
       target: '../../packages/orchestrator',
-      path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+      path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
     });
 
     await expect(
       symlink({
         target: '../../packages/orchestrator',
-        path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+        path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
       }),
     ).resolves.toBe(undefined);
   });
@@ -46,33 +46,33 @@ describe('symlink', () => {
     const proxy = symlinkProxy();
     proxy.succeeds({
       target: '../../packages/orchestrator',
-      path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+      path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
     });
 
     await symlink({
       target: '../../packages/orchestrator',
-      path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+      path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
       type: 'dir',
     });
     await symlink({
       target: '../../packages/orchestrator',
-      path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+      path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
     });
 
     expect(
       proxy.getCallsFor({
         target: '../../packages/orchestrator',
-        path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+        path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
       }),
     ).toStrictEqual([
       [
         '../../packages/orchestrator',
-        '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+        '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
         'dir',
       ],
       [
         '../../packages/orchestrator',
-        '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+        '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
         undefined,
       ],
     ]);

@@ -3,7 +3,7 @@
  * realpath instead when the caller needs the fully resolved path the link points at.
  *
  * USAGE:
- * await readlink('/worktree/node_modules/@dungeonmaster/orchestrator');
+ * await readlink('/worktree/node_modules/@legendscribe/brutalpit-orchestrator');
  * // Returns the link's raw target; rejects on ENOENT, EACCES and EINVAL (not a link)
  */
 

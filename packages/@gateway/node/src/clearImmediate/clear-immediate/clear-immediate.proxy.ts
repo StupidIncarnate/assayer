@@ -1,5 +1,5 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // passthrough: the real cancel must still run. The spy only records which handles were cleared.
 export const clearImmediateProxy = (): {

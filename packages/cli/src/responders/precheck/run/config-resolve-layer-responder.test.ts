@@ -11,7 +11,7 @@ describe('ConfigResolveLayerResponder', () => {
       const result = await ConfigResolveLayerResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error', runMode: 'thorough' },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' },
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });
@@ -26,12 +26,12 @@ describe('ConfigResolveLayerResponder', () => {
       const result = await ConfigResolveLayerResponder({ repoPath: '/repo' });
 
       expect(result).toStrictEqual({
-        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error', runMode: 'thorough' },
+        config: { version: '1', repoRoot: '.', exclude: [], darkSpots: 'warn', deadSurface: 'error', inputGaps: 'error' },
         configDir: '/repo',
         configPath: '/repo/assayer.config.json',
       });
       expect(proxy.getWrittenConfigFor({ configDir: '/repo' })).toBe(
-        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       );
     });
   });

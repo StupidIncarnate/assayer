@@ -6,9 +6,9 @@ describe('readJsonFileIfExists', () => {
   describe('successful reads', () => {
     it('VALID: {path: valid JSON file} => returns the parsed value', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
 
-      const result = await readJsonFileIfExists('/repo/.dungeonmaster.json');
+      const result = await readJsonFileIfExists('/repo/.lockdown-kit.json');
 
       expect(result).toStrictEqual({ port: 3737 });
     });
@@ -28,19 +28,19 @@ describe('readJsonFileIfExists', () => {
   describe('invalid content', () => {
     it('INVALID: {path: malformed JSON} => throws a SyntaxError naming the path', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '{not json' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{not json' });
 
-      await expect(readJsonFileIfExists('/repo/.dungeonmaster.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.dungeonmaster.json'),
+      await expect(readJsonFileIfExists('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
       );
     });
 
     it('EMPTY: {path: an empty file} => throws a SyntaxError, not null', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '' });
 
-      await expect(readJsonFileIfExists('/repo/.dungeonmaster.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.dungeonmaster.json'),
+      await expect(readJsonFileIfExists('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
       );
     });
   });
@@ -86,12 +86,12 @@ describe('readJsonFileIfExists', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
 
-      await readJsonFileIfExists('/repo/.dungeonmaster.json');
+      await readJsonFileIfExists('/repo/.lockdown-kit.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster.json' })).toStrictEqual([
-        ['/repo/.dungeonmaster.json', 'utf8'],
+      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
+        ['/repo/.lockdown-kit.json', 'utf8'],
       ]);
     });
   });

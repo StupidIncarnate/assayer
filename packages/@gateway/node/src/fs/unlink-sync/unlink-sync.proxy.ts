@@ -1,5 +1,5 @@
 import { unlinkSync } from 'fs';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 export const unlinkSyncProxy = (): {
   succeeds: ({ path }: { path: string }) => void;

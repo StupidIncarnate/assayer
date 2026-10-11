@@ -10,9 +10,9 @@ module.exports = {
   testEnvironment: 'jsdom',
   roots: ['<rootDir>/src'],
   // The base's setupFilesAfterEnv loads MSW's Node interceptors, which subclass the global
-  // `Response` at module load. jsdom has no `Response`, so dungeonmaster's published jsdom polyfills
+  // `Response` at module load. jsdom has no `Response`, so lockdown-kit's published jsdom polyfills
   // put undici's fetch classes on the global first.
-  setupFiles: ['@dungeonmaster/testing/jsdom-polyfills'],
+  setupFiles: ['@legendscribe/lockdown-kit-testing/jsdom-polyfills'],
   setupFilesAfterEnv: [...baseConfig.setupFilesAfterEnv, '@testing-library/jest-dom'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testMatch: ['**/src/**/*.test.[jt]s?(x)'],

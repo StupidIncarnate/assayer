@@ -1,4 +1,4 @@
-const base = require('@dungeonmaster/testing/jest-config-base');
+const base = require('@legendscribe/lockdown-kit-testing/jest-config-base');
 
 const [tsJest, tsJestOptions] = base.transform['^.+\\.tsx?$'];
 

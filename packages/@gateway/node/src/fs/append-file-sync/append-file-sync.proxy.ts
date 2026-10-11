@@ -1,5 +1,5 @@
 import { appendFileSync } from 'fs';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 export const appendFileSyncProxy = (): {
   succeeds: ({ path }: { path: string }) => void;

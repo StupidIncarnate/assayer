@@ -1,5 +1,5 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // passthrough: the real scheduler must still run — tests flush the event loop through it. The spy
 // only records what was asked for, so a scenario can read back the callback and arguments.

@@ -4,7 +4,7 @@
  * a permission failure means the answer is unknown, not "false".
  *
  * USAGE:
- * await pathExists('/repo/.dungeonmaster.json');
+ * await pathExists('/repo/.lockdown-kit.json');
  * // Returns true or false; rejects on EACCES
  */
 

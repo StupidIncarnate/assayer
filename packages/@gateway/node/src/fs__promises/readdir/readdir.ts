@@ -3,7 +3,7 @@
  * `Dirent` objects; reach for readdirEntries when the caller needs to know each entry's kind.
  *
  * USAGE:
- * await readdir('/repo/.dungeonmaster/quests');
+ * await readdir('/repo/.ls-lockdown-kit/quests');
  * // Returns every entry name directly under the path; rejects on ENOENT and every other failure
  */
 

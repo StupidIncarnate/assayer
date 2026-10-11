@@ -11,6 +11,6 @@
  *
  * USAGE:
  * import type { ValueMatcher } from '../gateway-test-support/value-matcher';
- * const matchesQuestKey: ValueMatcher = (value) => String(value).startsWith('dungeonmaster:quest:');
+ * const matchesQuestKey: ValueMatcher = (value) => String(value).startsWith('lockdown-kit:quest:');
  */
 export type ValueMatcher = string | ((value: unknown) => boolean);

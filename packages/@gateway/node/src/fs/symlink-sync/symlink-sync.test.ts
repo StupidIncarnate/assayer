@@ -7,23 +7,23 @@ describe('symlinkSync', () => {
     const proxy = symlinkSyncProxy();
     proxy.succeeds({
       target: '../../packages/orchestrator',
-      path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+      path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
     });
 
     symlinkSync({
       target: '../../packages/orchestrator',
-      path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+      path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
     });
 
     expect(
       proxy.calls({
         target: '../../packages/orchestrator',
-        path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+        path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
       }),
     ).toStrictEqual([
       [
         '../../packages/orchestrator',
-        '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+        '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
         undefined,
       ],
     ]);

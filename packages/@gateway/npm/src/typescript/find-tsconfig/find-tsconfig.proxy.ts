@@ -1,6 +1,6 @@
 import { findConfigFile } from '../bundled-typescript/bundled-typescript';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // The search reads the disk through `ts.sys`, so it is staged by its exact search path. A search path no test
 // staged throws.

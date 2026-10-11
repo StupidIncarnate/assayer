@@ -1,29 +1,38 @@
-const dungeonmasterPluginModule = require('@dungeonmaster/eslint-plugin');
+const lockdownKit = require('@legendscribe/lockdown-kit-eslint-plugin').default;
+const {
+    configLockdownKitBroker,
+    configArchitectureOverridesBroker,
+    configGatewayLintConfigBroker,
+    configWorkspacePackageNamesBroker,
+    configPackagePrefixBroker,
+} = require('@legendscribe/lockdown-kit-eslint-plugin');
 const tsparser = require('@typescript-eslint/parser');
-const { gatewayLocationsStatics } = require('@dungeonmaster/shared/statics');
+const { gatewayLocationsStatics } = require('@legendscribe/lockdown-kit-shared/statics');
 
-const dungeonmaster = dungeonmasterPluginModule.default;
-const { configGatewayLintConfigBroker, configWorkspacePackageNamesBroker } = dungeonmasterPluginModule;
+const architectureOverrides = configArchitectureOverridesBroker({ startDir: __dirname });
 const gatewayLintConfig = configGatewayLintConfigBroker({ startDir: __dirname });
 const workspacePackageNames = configWorkspacePackageNamesBroker({ startDir: __dirname });
-// The plugin's prebuilt `configs.dungeonmaster` has an empty gateway config and an empty workspace
-// list, so `ban-workspace-export-mocks` would check nothing. Building the configs here fills both.
-const dungeonmasterConfigs = dungeonmasterPluginModule.configDungeonmasterBroker({
+const packagePrefix = configPackagePrefixBroker({ startDir: __dirname });
+const lockdownKitConfigs = configLockdownKitBroker({
+    architectureOverrides,
     gatewayLintConfig,
     workspacePackageNames,
+    packagePrefix,
 });
-const dungeonmasterTestConfigs = dungeonmasterPluginModule.configDungeonmasterBroker({
+const lockdownKitTestConfigs = configLockdownKitBroker({
     forTesting: true,
+    architectureOverrides,
     gatewayLintConfig,
     workspacePackageNames,
+    packagePrefix,
 });
 // Assayer's own local rules — this repo's value contracts mean nothing to any other project, so they
-// cannot live in @dungeonmaster/eslint-plugin. See eslint-rules/index.js.
+// cannot live in @legendscribe/lockdown-kit-eslint-plugin. See eslint-rules/index.js.
 const assayerLocalRules = require('./eslint-rules');
 
 module.exports = [
     {
-        // Framework/build artifacts that live outside the dungeonmaster folder-type
+        // Framework/build artifacts that live outside the lockdown-kit folder-type
         // system (bundler configs, compiled output). Linting these would fail the
         // enforce-project-structure rule and typed-lint project resolution.
         ignores: [
@@ -34,14 +43,14 @@ module.exports = [
             '**/@types/**',
             '**/__mocks__/**',
             // manual-smoke-repo is fixture INPUT for Assayer's own compiler (a plain TS repo
-            // it analyzes), NOT dungeonmaster-standards code — exclude it from lint.
+            // it analyzes), NOT lockdown-kit-standards code — exclude it from lint.
             'manual-smoke-repo/**',
             // smoke-repo/ holds generated specimens, consumer code Assayer analyzes, for the same reason.
             'smoke-repo/**',
             // eslint-rules/ holds Assayer's own local ESLint plugin. A lint rule fits none
-            // of the dungeonmaster folder types, so it lives outside packages/*/src and is
+            // of the lockdown-kit folder types, so it lives outside packages/*/src and is
             // excluded here for the same reason manual-smoke-repo is: linting it under the
-            // dungeonmaster ruleset would fail enforce-project-structure.
+            // lockdown-kit ruleset would fail enforce-project-structure.
             'eslint-rules/**',
             // The specimen generator's declarations are consumer-shaped code with holes: classes whose
             // methods ignore `this`, generators, unnamed functions. The rules forbid the shapes these
@@ -65,17 +74,17 @@ module.exports = [
             },
         },
         plugins: {
-            ...dungeonmasterConfigs.typescript.plugins,
-            '@dungeonmaster': dungeonmaster,
+            ...lockdownKitConfigs.typescript.plugins,
+            '@legendscribe/lockdown-kit': lockdownKit,
             '@assayer': assayerLocalRules,
         },
         rules: {
-            ...dungeonmasterConfigs.typescript.rules,
+            ...lockdownKitConfigs.typescript.rules,
             '@assayer/no-nullish-coalescing-on-arrange-value': 'error',
         },
     },
     {
-        files: dungeonmasterConfigs.gateway.files,
+        files: lockdownKitConfigs.gateway.files,
         languageOptions: {
             parser: tsparser,
             parserOptions: {
@@ -88,14 +97,14 @@ module.exports = [
             },
         },
         plugins: {
-            ...dungeonmasterConfigs.gateway.plugins,
-            '@dungeonmaster': dungeonmaster,
+            ...lockdownKitConfigs.gateway.plugins,
+            '@legendscribe/lockdown-kit': lockdownKit,
         },
         rules: {
-            ...dungeonmasterConfigs.gateway.rules,
+            ...lockdownKitConfigs.gateway.rules,
         },
     },
-    ...dungeonmasterConfigs.fileOverrides,
+    ...lockdownKitConfigs.fileOverrides,
     {
         files: ['**/*.test.ts', '**/*.test.tsx'],
         languageOptions: {
@@ -110,14 +119,14 @@ module.exports = [
             },
         },
         plugins: {
-            ...dungeonmasterTestConfigs.test.plugins,
-            '@dungeonmaster': dungeonmaster,
+            ...lockdownKitTestConfigs.test.plugins,
+            '@legendscribe/lockdown-kit': lockdownKit,
             '@assayer': assayerLocalRules,
         },
         rules: {
-            ...dungeonmasterTestConfigs.test.rules,
+            ...lockdownKitTestConfigs.test.rules,
             '@assayer/no-nullish-coalescing-on-arrange-value': 'error',
         },
     },
-    ...dungeonmasterTestConfigs.fileOverrides,
+    ...lockdownKitTestConfigs.fileOverrides,
 ];

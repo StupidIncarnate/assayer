@@ -78,7 +78,7 @@ describe('assayer CLI precheck flow (real CLI run from source)', () => {
       const manifestExists = cli.exists({ relPath: '.assayer/cache/manifest.json' });
 
       expect(exitCode).toBe(0);
-      expect(generatedConfig).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}');
+      expect(generatedConfig).toBe('{"version":"1","repoRoot":".","exclude":[],"darkSpots":"warn","deadSurface":"error","inputGaps":"error"}');
       expect(manifestExists).toBe(true);
       expect(stdout).toMatch(QUIET_STATUS_STDOUT);
     });

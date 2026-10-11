@@ -6,18 +6,18 @@ describe('readdirIfExists', () => {
   describe('successful reads', () => {
     it('VALID: {path: directory with entries} => returns their names', async () => {
       const proxy = readdirIfExistsProxy();
-      proxy.returns({ path: '/repo/.dungeonmaster/quests', names: ['quest-1.json'] });
+      proxy.returns({ path: '/repo/.ls-lockdown-kit/quests', names: ['quest-1.json'] });
 
-      const result = await readdirIfExists('/repo/.dungeonmaster/quests');
+      const result = await readdirIfExists('/repo/.ls-lockdown-kit/quests');
 
       expect(result).toStrictEqual(['quest-1.json']);
     });
 
     it('EMPTY: {path: an existing but empty directory} => returns an empty array, not null', async () => {
       const proxy = readdirIfExistsProxy();
-      proxy.returns({ path: '/repo/.dungeonmaster/quests', names: [] });
+      proxy.returns({ path: '/repo/.ls-lockdown-kit/quests', names: [] });
 
-      const result = await readdirIfExists('/repo/.dungeonmaster/quests');
+      const result = await readdirIfExists('/repo/.ls-lockdown-kit/quests');
 
       expect(result).toStrictEqual([]);
     });
@@ -46,10 +46,10 @@ describe('readdirIfExists', () => {
 
     it('ERROR: {path: a parent segment that is a file} => rejects with the raw ENOTDIR error', async () => {
       const proxy = readdirIfExistsProxy();
-      proxy.notADirectory({ path: '/repo/.dungeonmaster.json/nested' });
+      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
 
-      await expect(readdirIfExists('/repo/.dungeonmaster.json/nested')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.dungeonmaster.json/nested' }),
+      await expect(readdirIfExists('/repo/.lockdown-kit.json/nested')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' }),
       );
     });
   });
@@ -82,12 +82,12 @@ describe('readdirIfExists', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readdirIfExistsProxy();
-      proxy.returns({ path: '/repo/.dungeonmaster/quests', names: ['quest-1.json'] });
+      proxy.returns({ path: '/repo/.ls-lockdown-kit/quests', names: ['quest-1.json'] });
 
-      await readdirIfExists('/repo/.dungeonmaster/quests');
+      await readdirIfExists('/repo/.ls-lockdown-kit/quests');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster/quests' })).toStrictEqual([
-        ['/repo/.dungeonmaster/quests'],
+      expect(proxy.getCallsFor({ path: '/repo/.ls-lockdown-kit/quests' })).toStrictEqual([
+        ['/repo/.ls-lockdown-kit/quests'],
       ]);
     });
   });

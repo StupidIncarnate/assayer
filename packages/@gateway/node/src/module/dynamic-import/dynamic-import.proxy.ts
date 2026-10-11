@@ -1,4 +1,4 @@
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { dynamicImport } from './dynamic-import';
 
 // `import()` cannot be mocked from outside, so the wrapper itself is the seam a caller's test

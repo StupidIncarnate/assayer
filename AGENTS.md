@@ -4,7 +4,7 @@ Go read [CLAUDE.md](file://./CLAUDE.md) to get context on the project and repo b
 
 ## Antigravity MCP Calling
 
-All Dungeonmaster MCP tools (`get-project-map`, `discover`, `get-architecture`, `signal-back`, etc.) are available via `call_mcp_tool` under server `dungeonmaster_dungeonmaster`.
+All lockdown-kit MCP tools (`get-project-map`, `discover`, `get-architecture`, etc.) are available via `call_mcp_tool` under server `lockdown-kit_lockdown-kit`.
 
 ## Specimen Test Execution Concurrency
 

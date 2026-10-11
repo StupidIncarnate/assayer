@@ -2,8 +2,8 @@ import { watch, createReadStream, statSync, existsSync } from 'fs';
 import { dirname } from 'path';
 import { createInterface } from 'readline';
 import { EventEmitter } from 'events';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import type { MockHandle } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { MockHandle } from '@legendscribe/lockdown-kit-testing/register-mock';
 import type { PathMatcher } from '../../gateway-test-support/path-matcher';
 
 const EXISTING_FILE_SIZE_BYTES = 128;

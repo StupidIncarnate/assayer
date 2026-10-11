@@ -6,7 +6,7 @@ import { FileExistsRecordedErrorStub } from './file-exists-recorded-error.stub';
 
 describe('FileExistsRecordedErrorStub', () => {
   it('VALID: {path of a file that exists} => matches a real exclusive-create EEXIST field for field', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dm-node-eexist-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lk-node-eexist-'));
     const path = join(dir, 'boot.lock');
     writeFileSync(path, 'held');
 

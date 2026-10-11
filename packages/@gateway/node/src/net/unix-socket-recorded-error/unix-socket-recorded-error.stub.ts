@@ -8,9 +8,9 @@
  * host and port.
  *
  * USAGE:
- * const error = UnixSocketRecordedErrorStub({ code: 'ENOENT', socketPath: '/tmp/dm-sock/a.sock' });
- * // Returns { message: 'connect ENOENT /tmp/dm-sock/a.sock', errno: -2, code: 'ENOENT',
- * //   syscall: 'connect', address: '/tmp/dm-sock/a.sock' }
+ * const error = UnixSocketRecordedErrorStub({ code: 'ENOENT', socketPath: '/tmp/lk-sock/a.sock' });
+ * // Returns { message: 'connect ENOENT /tmp/lk-sock/a.sock', errno: -2, code: 'ENOENT',
+ * //   syscall: 'connect', address: '/tmp/lk-sock/a.sock' }
  */
 import { constants } from 'os';
 

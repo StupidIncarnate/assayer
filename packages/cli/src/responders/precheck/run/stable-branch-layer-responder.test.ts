@@ -94,7 +94,7 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"master","darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       ]);
       expect(proxy.promptsAsked()).toStrictEqual([MAIN_MASTER_PROMPT]);
       expect(result).toStrictEqual({
@@ -105,7 +105,6 @@ describe('StableBranchLayerResponder', () => {
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
-        runMode: 'thorough',
       });
     });
   });
@@ -124,7 +123,7 @@ describe('StableBranchLayerResponder', () => {
       });
 
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       ]);
       expect(proxy.promptsAsked()).toStrictEqual([]);
       expect(result).toStrictEqual({
@@ -135,7 +134,6 @@ describe('StableBranchLayerResponder', () => {
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
-        runMode: 'thorough',
       });
     });
   });
@@ -156,7 +154,7 @@ describe('StableBranchLayerResponder', () => {
 
       expect(proxy.promptsAsked()).toStrictEqual([]);
       expect(proxy.getSavedConfigsFor({ configPath: '/repo/assayer.config.json' })).toStrictEqual([
-        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error","runMode":"thorough"}',
+        '{"version":"1","repoRoot":".","exclude":[],"stableBranch":"main","darkSpots":"warn","deadSurface":"error","inputGaps":"error"}',
       ]);
       expect(result).toStrictEqual({
         version: '1',
@@ -166,7 +164,6 @@ describe('StableBranchLayerResponder', () => {
         darkSpots: 'warn',
         deadSurface: 'error',
         inputGaps: 'error',
-        runMode: 'thorough',
       });
     });
   });

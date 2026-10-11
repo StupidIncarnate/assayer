@@ -4,7 +4,7 @@
  * cast unnecessary. Reach for statIfExists when a missing path is an ordinary answer.
  *
  * USAGE:
- * await stat('/repo/.dungeonmaster.json');
+ * await stat('/repo/.lockdown-kit.json');
  * // Returns { kind: 'file', sizeBytes, modifiedAtMs, createdAtMs }; rejects on ENOENT and every
  * // other failure
  */

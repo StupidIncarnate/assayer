@@ -4,7 +4,7 @@
  * string preserved, never normalized. EEXIST throws raw when path already exists.
  *
  * USAGE:
- * symlinkSync({ target: '../../packages/orchestrator', path: '/worktree/node_modules/@dungeonmaster/orchestrator' });
+ * symlinkSync({ target: '../../packages/orchestrator', path: '/worktree/node_modules/@legendscribe/brutalpit-orchestrator' });
  * // Creates path as a symlink pointing at target
  */
 import { symlinkSync as nodeSymlinkSync } from 'fs';

@@ -8,8 +8,8 @@
  *
  * USAGE:
  * await copyDirContents({
- *   from: '/tmp/dm-siege-inst_1',
- *   to: '/tmp/dm-siege-inst_1/.siegelense-snapshots/1',
+ *   from: '/tmp/lk-siege-inst_1',
+ *   to: '/tmp/lk-siege-inst_1/.siegelense-snapshots/1',
  *   excludeNames: ['.siegelense-snapshots'],
  * });
  * // Copies every child of from except the excluded names; removes what it copied if any child fails

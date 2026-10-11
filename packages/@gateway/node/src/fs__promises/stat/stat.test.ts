@@ -7,12 +7,12 @@ describe('stat', () => {
     it('VALID: {path: a regular file} => returns kind file with size and mtime', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/repo/.dungeonmaster.json');
+      const result = await stat('/repo/.lockdown-kit.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -25,12 +25,12 @@ describe('stat', () => {
     it('VALID: {path: a directory} => returns kind directory', async () => {
       const proxy = statProxy();
       proxy.returnsDirectory({
-        path: '/repo/.dungeonmaster',
+        path: '/repo/.ls-lockdown-kit',
         sizeBytes: 4096,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/repo/.dungeonmaster');
+      const result = await stat('/repo/.ls-lockdown-kit');
 
       expect(result).toStrictEqual({
         kind: 'directory',
@@ -43,12 +43,12 @@ describe('stat', () => {
     it('VALID: {path: a symlink target reported as a symlink} => returns kind symlink', async () => {
       const proxy = statProxy();
       proxy.returnsSymlink({
-        path: '/repo/node_modules/@dungeonmaster/orchestrator',
+        path: '/repo/node_modules/@legendscribe/brutalpit-orchestrator',
         sizeBytes: 0,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/repo/node_modules/@dungeonmaster/orchestrator');
+      const result = await stat('/repo/node_modules/@legendscribe/brutalpit-orchestrator');
 
       expect(result).toStrictEqual({
         kind: 'symlink',
@@ -61,12 +61,12 @@ describe('stat', () => {
     it('EDGE: {path: mtimeMs with sub-millisecond precision} => floors it to an integer', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000.75,
       });
 
-      const result = await stat('/repo/.dungeonmaster.json');
+      const result = await stat('/repo/.lockdown-kit.json');
 
       expect(result.modifiedAtMs).toBe(1700000000000);
     });
@@ -74,13 +74,13 @@ describe('stat', () => {
     it('VALID: {path, createdAtMs staged distinct from modifiedAtMs} => returns its own birth time', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
         createdAtMs: 1600000000000,
       });
 
-      const result = await stat('/repo/.dungeonmaster.json');
+      const result = await stat('/repo/.lockdown-kit.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -115,13 +115,13 @@ describe('stat', () => {
     it('VALID: {returnsMatchingPath, a predicate} => resolves for a path the predicate accepts', async () => {
       const proxy = statProxy();
       proxy.returnsMatchingPath({
-        path: (value) => String(value).endsWith('.dungeonmaster.json'),
+        path: (value) => String(value).endsWith('.lockdown-kit.json'),
         kind: 'file',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/resolved/at/runtime/.dungeonmaster.json');
+      const result = await stat('/resolved/at/runtime/.lockdown-kit.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -147,15 +147,15 @@ describe('stat', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      await stat('/repo/.dungeonmaster.json');
+      await stat('/repo/.lockdown-kit.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster.json' })).toStrictEqual([
-        ['/repo/.dungeonmaster.json'],
+      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
+        ['/repo/.lockdown-kit.json'],
       ]);
     });
   });

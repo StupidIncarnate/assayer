@@ -1,5 +1,5 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { ElectronDoubleStub } from './electron-double.stub';
 import { IpcInvokeRecordedErrorStub } from './ipc-invoke-recorded-error/ipc-invoke-recorded-error.stub';
 import { LoadUrlRecordedErrorStub } from './load-url-recorded-error/load-url-recorded-error.stub';

@@ -1,5 +1,5 @@
 import { createConnection, Socket } from 'net';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // `unixSocketRequest` calls `createConnection({ path: socketPath })`, so every stage is addressed
 // by that exact `{ path }` — a test's own socketPath — and a socket nobody staged throws. Each stage

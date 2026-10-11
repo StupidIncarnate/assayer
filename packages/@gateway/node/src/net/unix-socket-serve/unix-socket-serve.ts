@@ -7,7 +7,7 @@
  * a fresh `listen()` against it fails `EADDRINUSE`.
  *
  * USAGE:
- * const { close } = await unixSocketServe({ socketPath: '/tmp/dm-sock/inst.sock', onRequestLine: async (line) => line });
+ * const { close } = await unixSocketServe({ socketPath: '/tmp/lk-sock/inst.sock', onRequestLine: async (line) => line });
  * // Resolves once the socket is listening; close() stops accepting new connections
  */
 

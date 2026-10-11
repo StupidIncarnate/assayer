@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { AbortErrorStub } from '../abort-error/abort-error.stub';
 
 const NULL_BODY_TEXT = '';

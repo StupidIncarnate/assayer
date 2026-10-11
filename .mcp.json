@@ -1,11 +1,19 @@
 {
   "mcpServers": {
-    "dungeonmaster": {
+    "lockdown-kit": {
       "type": "stdio",
       "command": "node",
       "args": [
         "-e",
-        "try { require('@dungeonmaster/mcp'); } catch (e) { try { const g = require('child_process').execSync('npm root -g', { encoding: 'utf8' }).trim(); const p = require('path'); try { require(p.join(g, '@dungeonmaster/mcp')); } catch { require(p.join(g, 'dungeonmaster', 'node_modules', '@dungeonmaster/mcp')); } } catch { throw e; } }"
+        "try { require('@legendscribe/lockdown-kit-mcp'); } catch (e) { try { const g = require('child_process').execSync('npm root -g', { encoding: 'utf8' }).trim(); const p = require('path'); try { require(p.join(g, '@legendscribe/lockdown-kit-mcp')); } catch { require(p.join(g, '@legendscribe/lockdown-kit', 'node_modules', '@legendscribe/lockdown-kit-mcp')); } } catch { throw e; } }"
+      ]
+    },
+    "brutalpit": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "-e",
+        "const p = require('path'); const entry = p.join('dist', 'bin', 'brutalpit-mcp-entry.js'); try { require(p.join(p.dirname(require.resolve('@legendscribe/brutalpit-mcp/package.json')), entry)); } catch (e) { try { const g = require('child_process').execSync('npm root -g', { encoding: 'utf8' }).trim(); try { require(p.join(g, '@legendscribe/brutalpit-mcp', entry)); } catch { require(p.join(g, '@legendscribe/brutalpit', 'node_modules', '@legendscribe/brutalpit-mcp', entry)); } } catch { throw e; } }"
       ]
     }
   }

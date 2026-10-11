@@ -5,7 +5,7 @@
  * into its own error.
  *
  * USAGE:
- * const line = await unixSocketRequest({ socketPath: '/tmp/dm-sock/inst.sock', requestLine: '{"kind":"ping"}', timeoutMs: 5000 });
+ * const line = await unixSocketRequest({ socketPath: '/tmp/lk-sock/inst.sock', requestLine: '{"kind":"ping"}', timeoutMs: 5000 });
  * // Returns the raw line the peer wrote back, whatever it contains
  */
 

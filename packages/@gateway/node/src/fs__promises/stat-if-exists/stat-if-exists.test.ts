@@ -7,12 +7,12 @@ describe('statIfExists', () => {
     it('VALID: {path: existing} => returns its metadata', async () => {
       const proxy = statIfExistsProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await statIfExists('/repo/.dungeonmaster.json');
+      const result = await statIfExists('/repo/.lockdown-kit.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -25,13 +25,13 @@ describe('statIfExists', () => {
     it('VALID: {path, createdAtMs staged distinct from modifiedAtMs} => returns its own birth time', async () => {
       const proxy = statIfExistsProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
         createdAtMs: 1600000000000,
       });
 
-      const result = await statIfExists('/repo/.dungeonmaster.json');
+      const result = await statIfExists('/repo/.lockdown-kit.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -68,13 +68,13 @@ describe('statIfExists', () => {
     it('VALID: {returnsMatchingPath, a predicate} => resolves for a path the predicate accepts', async () => {
       const proxy = statIfExistsProxy();
       proxy.returnsMatchingPath({
-        path: (value) => String(value).endsWith('.dungeonmaster.json'),
+        path: (value) => String(value).endsWith('.lockdown-kit.json'),
         kind: 'file',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await statIfExists('/resolved/at/runtime/.dungeonmaster.json');
+      const result = await statIfExists('/resolved/at/runtime/.lockdown-kit.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -100,15 +100,15 @@ describe('statIfExists', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = statIfExistsProxy();
       proxy.returnsFile({
-        path: '/repo/.dungeonmaster.json',
+        path: '/repo/.lockdown-kit.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      await statIfExists('/repo/.dungeonmaster.json');
+      await statIfExists('/repo/.lockdown-kit.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster.json' })).toStrictEqual([
-        ['/repo/.dungeonmaster.json'],
+      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
+        ['/repo/.lockdown-kit.json'],
       ]);
     });
   });

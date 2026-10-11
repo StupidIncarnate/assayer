@@ -1,5 +1,5 @@
 import { openSync } from 'fs';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 export const openForAppendSyncProxy = (): {
   returns: ({ path, fd }: { path: string; fd: number }) => void;

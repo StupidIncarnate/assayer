@@ -6,9 +6,9 @@ describe('readJsonFile', () => {
   describe('successful reads', () => {
     it('VALID: {path: valid JSON file} => returns the parsed value', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
 
-      const result = await readJsonFile('/repo/.dungeonmaster.json');
+      const result = await readJsonFile('/repo/.lockdown-kit.json');
 
       expect(result).toStrictEqual({ port: 3737 });
     });
@@ -17,19 +17,19 @@ describe('readJsonFile', () => {
   describe('invalid content', () => {
     it('INVALID: {path: malformed JSON} => throws a SyntaxError naming the path', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '{not json' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{not json' });
 
-      await expect(readJsonFile('/repo/.dungeonmaster.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.dungeonmaster.json'),
+      await expect(readJsonFile('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
       );
     });
 
     it('EMPTY: {path: an empty file} => throws a SyntaxError, because empty is not JSON', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '' });
 
-      await expect(readJsonFile('/repo/.dungeonmaster.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.dungeonmaster.json'),
+      await expect(readJsonFile('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
       );
     });
   });
@@ -67,11 +67,11 @@ describe('readJsonFile', () => {
     it('VALID: {returnsRawMatchingPath, a predicate} => resolves for a path the predicate accepts', async () => {
       const proxy = readJsonFileProxy();
       proxy.returnsRawMatchingPath({
-        path: (value) => String(value).endsWith('.dungeonmaster.json'),
+        path: (value) => String(value).endsWith('.lockdown-kit.json'),
         rawContents: '{"port":3737}',
       });
 
-      const result = await readJsonFile('/resolved/at/runtime/.dungeonmaster.json');
+      const result = await readJsonFile('/resolved/at/runtime/.lockdown-kit.json');
 
       expect(result).toStrictEqual({ port: 3737 });
     });
@@ -91,12 +91,12 @@ describe('readJsonFile', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.dungeonmaster.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
 
-      await readJsonFile('/repo/.dungeonmaster.json');
+      await readJsonFile('/repo/.lockdown-kit.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster.json' })).toStrictEqual([
-        ['/repo/.dungeonmaster.json', 'utf8'],
+      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
+        ['/repo/.lockdown-kit.json', 'utf8'],
       ]);
     });
   });

@@ -1,10 +1,14 @@
-# Dungeonmaster Operating Rules
+# LockdownKit Operating Rules
+
+On every call to `discover`, `get-project-map` and `get-project-inventory`, pass `root` as the absolute path of the repo root, or of the worktree root when you work in `worktrees/<name>`, because Antigravity sends no caller stamp.
+
+---
 
 ## discover Tool
 
-`discover` is the ONLY way to search this codebase. Native Glob, Grep, Search, and Find tools — plus shell `grep`/`find`/`sed` — are blocked by hooks. `discover`, `get-project-map` and `get-project-inventory` are MCP **tools**: load them via `ToolSearch` (Claude Code) or `call_mcp_tool` under server `dungeonmaster_dungeonmaster` (Antigravity), never as shell commands or skills.
+`discover` is the ONLY way to search this codebase. Native Glob, Grep, Search, and Find tools — plus shell `grep`/`find`/`sed` — are blocked by hooks. `discover`, `get-project-map` and `get-project-inventory` are MCP **tools**: load them via `ToolSearch` (Claude Code) or `call_mcp_tool` under server `lockdown-kit` (Antigravity), never as shell commands or skills.
 
-**`discover` is step THREE, never step one.** `get-project-map({ packages: [...] })` is a package's bird's-eye view and `get-project-inventory({ packageName })` lists all it holds; `discover` globs into what one of those named. Reach for it first and you are guessing a path; a wrong glob returns nothing, which reads exactly like a package that holds nothing. `<dungeonmaster-searchStrategy>` has the order.
+**`discover` is step THREE, never step one.** `get-project-map({ packages: [...] })` is a package's bird's-eye view and `get-project-inventory({ packageName })` lists all it holds; `discover` globs into what one of those named. Reach for it first and you are guessing a path; a wrong glob returns nothing, which reads exactly like a package that holds nothing. `<lockdown-kit-searchStrategy>` has the order.
 
 | Param | Type | Description |
 |-------|------|-------------|
@@ -13,7 +17,7 @@
 | `verbose` | boolean? | Show signatures, companions. Default: false |
 | `context` | number? | Lines around grep hits. Default: 0 |
 | `strict` | boolean? | Disable cross-convention matching. Default: false |
-| `root` | string? | Absolute worktree path to search; see `<dungeonmaster-worktrees>` |
+| `root` | string? | Absolute worktree path to search; see `<lockdown-kit-worktrees>` |
 
 A `glob` call returns a folder tree with folder type and purpose. `verbose: true` returns JSON with signatures, companions and usage.
 
@@ -39,7 +43,7 @@ Use `discover` to locate files. Use `Read` only once you need full file contents
 Before searching, exploring, or modifying code, follow this order.
 
 ### Step 1: candidate package(s)
-Pick the package(s) the task touches; the `dungeonmaster-packages` snippet lists them. No guess? Read the task again.
+Pick the package(s) the task touches; the `lockdown-kit-packages` snippet lists them. No guess? Read the task again.
 
 ### Step 2: map or inventory the package — BEFORE your first `discover`
 **Not optional, and `discover` does not stand in for it.** Both take the package name Step 1 gave you.
@@ -53,7 +57,7 @@ Pick the package(s) the task touches; the `dungeonmaster-packages` snippet lists
 ### Step 3: `discover` a targeted glob, then `Read`
 Glob into the folder Step 2 named — glob, not grep: grep guesses names, glob browses structure. `get-project-map` errors on an unknown name and lists the valid ones.
 
-**What you write once you have found it** is the `<dungeonmaster-reportingFindings>` snippet.
+**What you write once you have found it** is the `<lockdown-kit-reportingFindings>` snippet.
 
 ---
 
@@ -129,10 +133,9 @@ Call both tools, read their output, THEN plan your approach.
 | `--only lint,typecheck,unit` | Comma-separated check types. Omit for all. |
 | `--onlyTests <regex>` | Filter tests by name. `\|` alternates. |
 | `-- file1 file2` | Passthrough file paths. |
-| `--committed` | All checks, on this branch's commits over `origin/main`. |
-| `--uncommitted` | All checks, on the working tree. |
+| `--changed` | All checks, on every file that differs from origin's default branch: committed, uncommitted and untracked. |
 
-**`--uncommitted` GRADES untracked files**, so an all-new-files pass is never silently skipped. **`--committed` and `--uncommitted` combine** for the whole branch. Neither accepts `--only`, `--onlyTests` or `-- <files>` — re-run those as `--only <types> -- <files>`.
+`--changed` accepts no `--only`, `--onlyTests` or `-- <files>` — re-run those as `--only <types> -- <files>`.
 
 **A 0-file git scope runs NOTHING**: ward says so and exits 0 — empty, not green.
 
@@ -143,7 +146,7 @@ npm run ward                                  # All checks
 npm run ward -- -- pkg/a.ts pkg/a.test.ts     # THESE FILES — ward picks the checks
 npm run ward -- --only unit -- pkg/a.test.ts  # These files, one check type
 npm run ward -- -- packages/hooks             # One package
-npm run ward -- --committed --uncommitted     # Whole branch (or either half)
+npm run ward -- --changed                     # Every file this branch changed
 ```
 
 Pass every path you touched after `--`. Repo-relative, no `./`.
@@ -156,17 +159,19 @@ Pass every path you touched after `--`. Repo-relative, no `./`.
 
 ## Ward Invocation Discipline
 
-Applies to every ward run, in any repo, by any agent.
+Applies to every ward run.
 
 **Scope ward to the job.** Given specific files, run ward on those files and nothing wider: `npm run ward -- -- <files>`. Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
 
-**Never `cd` into a package.** Ward runs from the repo root; scope it with paths after `--`. Prefer FILE paths; a bare directory pulls in the package.
+**Never `cd` into a package.** Ward runs from the root; scope it with paths after `--`. Prefer FILE paths.
 
-**Let it block, with `timeout: 600000`** (the 2-min default kills a repo-wide run). A wide run outlives even that, and the harness then backgrounds it and returns you no result — background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
+**Let it block, with `timeout: 600000`** (the 2-min default kills a wide run). A wide run outlives even that; background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
 
-**Run it ONCE per tree state, and fix on `--uncommitted`.** Right flags first time; never re-run the same checks hoping for a different answer. A FIX makes a new state, so re-running after one is fine — and a red found by a bare run costs another whole-repo run to confirm, where `--uncommitted` runs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. **No typecheck is lost**: `tsc --noEmit` grades a touched package WHOLE whatever paths you pass.
+**Run it ONCE per tree state, and fix on `--changed`.** Right flags first time; never re-run unchanged state. A FIX is a new state; a red from a bare run costs a whole-repo run to confirm, where `--changed` runs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Every run typechecks first: the packages in scope plus every package that depends on them. A type error stops the run before lint and tests, which then read `build errored, could not proceed`.
 
-**A skip on a scoped run is not a regression.** `No tests found` on a file-scoped run becomes `status: 'skip'`; full runs still fail loudly. Never reach for `--passWithNoTests`. `DISCOVERY MISMATCH` means the check type has no counterpart for those files — narrow `--only`, never widen scope.
+**After merging the default branch,** run `npm run ward -- --changed` before the bare run. **A changed shared file** (harness, proxy, stub, helper) needs every test importing it: find them with `discover`, pass them after `--`.
+
+**A skip on a scoped run is not a regression.** `No tests found` on a file-scoped run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. `DISCOVERY MISMATCH` means no check type matches those files — narrow `--only`, never widen scope.
 
 **Who owns a FULL run.** An agent working directly for the user makes a full `npm run ward` exit 0 and owns every failure in it, including ones it did not cause. An orchestrator-dispatched role never runs the full sweep; its Operating Rules name its rung, and the family's own `ward` step is the regression pass.
 
@@ -229,8 +234,8 @@ Applies to every build, in any repo, by any agent.
 
 | About to run | Build |
 |---|---|
-| the production server, or `dungeonmaster start` | the whole repo |
-| `dungeonmaster init` | the whole repo |
+| the production server, or `brutalpit start` | the whole repo |
+| `lockdown-kit init` | the whole repo |
 | an MCP tool, having edited the MCP package | that package, then reconnect the MCP |
 | a hook, having edited the hooks package | that package |
 | ward itself, having edited ward's own source | that package |
@@ -241,32 +246,32 @@ Scope it — `npm run build --workspace=<name>` when one package changed. A stal
 
 ## Worktrees
 
-Applies in any repo `dungeonmaster init` has touched.
+Applies in any repo `lockdown-kit init` has touched.
 
-**One tool makes a worktree: `mcp__dungeonmaster__create-worktree({ name })`.** It returns a path under `worktrees/` with `node_modules` hardlinked, the compiled output copied across, and every link verified to resolve inside the tree. Claude Code's own worktree command is refused by a hook naming this tool, and a hand-assembled `git worktree add` gives you a tree where nothing resolves — no `node_modules`, no binaries, so ward cannot start.
+**One tool makes a worktree: `mcp__lockdown-kit__create-worktree({ name })`.** It returns a path under `worktrees/` with `node_modules` hardlinked, the compiled output copied across, and every link verified to resolve inside the tree. Claude Code's own worktree command is refused by a hook naming this tool, and a hand-assembled `git worktree add` gives you a tree where nothing resolves — no `node_modules`, no binaries, so ward cannot start.
 
 **Never recompile a native module inside a worktree.** `node_modules` is hardlinked, so a package's files and the main checkout's are the same bytes. Installing is safe: npm REPLACES a package directory, which breaks the link cleanly. `npm rebuild` is not: node-gyp writes its output through the existing path, so the build lands in the main checkout and every other worktree at once. Rebuild in the main checkout instead — through that same hardlink, every worktree already has the result.
 
 **A worktree is NOT hermetic, and that fakes experiments.** It sits under the main checkout, so node's walk-up escapes it: move a package's compiled output aside inside a worktree and resolution keeps climbing until it finds the main checkout's copy. A typecheck that should have failed then passes, and reads back as "the premise was wrong". An experiment that turns on missing compiled output has to fence resolution to the worktree rather than trusting the directory boundary.
 
-**Working in a worktree, pass `root`.** A Task sub-agent inherits its operator's session cwd and its Bash `cd` does not persist, so `discover`, `get-project-map` and `get-project-inventory` answer about the operator's checkout. Give each `root: <absolute worktree path>` (it must lie inside the session's repo), and give every file path to `Read`, `Edit` and ward absolute. `projectRootSource: 'argument'` confirms the tree.
+**Working in a worktree, pass `root`.** A Task sub-agent inherits its operator's session cwd and its Bash `cd` does not persist, so `discover`, `get-project-map` and `get-project-inventory` answer about the operator's checkout. Give each `root: <absolute worktree path>` (a repo root or worktree root: the folder must itself hold `.lockdown-kit.json`, and a subfolder is refused), and give every file path to `Read`, `Edit` and ward absolute. `projectRootSource: 'argument'` confirms the tree.
 
 ---
 
 ## Generated and Gated Config
 
-Applies in any repo `dungeonmaster init` has touched.
+Applies in any repo `lockdown-kit init` has touched.
 
-**Never hand-edit `.claude/settings.json`, `.claude/settings.local.json`, `.mcp.json`, or any `.env*` file.** The settings files are GENERATED: each dungeonmaster package's `StartInstall` writes and merges its own section, so a hand-edit is overwritten the next time anyone runs `dungeonmaster init`. All four are also gated behind a permission prompt, which stalls an automated run — and dispatching a sub-agent to edit one hits the same wall.
+**Never hand-edit `.claude/settings.json`, `.claude/settings.local.json`, `.mcp.json`, or any `.env*` file.** The settings files are GENERATED: each lockdown-kit package's `StartInstall` writes and merges its own section, so a hand-edit is overwritten the next time anyone runs `lockdown-kit init`. All four are also gated behind a permission prompt, which stalls an automated run — and dispatching a sub-agent to edit one hits the same wall.
 
-**To change a generated entry, change the code that generates it, then re-run `dungeonmaster init`.**
+**To change a generated entry, change the code that generates it, then re-run `lockdown-kit init`.**
 
 | Entry | Owner |
 |---|---|
-| hook entries — `PreToolUse`, `SessionStart`, `SubagentStart`, `WorktreeCreate` | `@dungeonmaster/hooks` |
-| `permissions.allow[]` rows like `mcp__dungeonmaster__<tool>` | `@dungeonmaster/mcp` |
-| the `.mcp.json` server entry | `@dungeonmaster/mcp` |
-| `worktrees/` and its gitignore line | `@dungeonmaster/orchestrator` |
+| hook entries — `PreToolUse`, `SessionStart`, `SubagentStart`, `WorktreeCreate` | `@legendscribe/lockdown-kit-hooks` |
+| `permissions.allow[]` rows like `mcp__lockdown-kit__<tool>` | `@legendscribe/lockdown-kit-mcp` |
+| the `.mcp.json` server entry | `@legendscribe/lockdown-kit-mcp` |
+| `worktrees/` and its gitignore line | `@legendscribe/lockdown-kit-worktree` |
 | anything else | the package whose `StartInstall` writes it |
 
 For a gated file nothing generates — an `.env`, a hand-written `.mcp.json` — write up the cause and the exact one-line diff and ask the user to apply it. Do not reach for another tool to get around the prompt.
@@ -275,37 +280,37 @@ For a gated file nothing generates — an `.env`, a hand-written `.mcp.json` —
 
 ## siegelense
 
-Applies in any repo `dungeonmaster init` has touched — siegelense works the same way everywhere it runs.
+Applies in any repo `lockdown-kit init` has touched — siegelense works the same way everywhere it runs.
 
-**`dungeonmaster siegelense` drives a real running instance and returns what it measures, never what the code claims.** Reach for it whenever a claim needs proof against a live system: a click really fires its request, an error really shows on screen, a fix really changed what renders. `discover` and a code read tell you what SHOULD happen; siegelense tells you what DID.
+**`lockdown-kit siegelense` drives a real running instance and returns what it measures, never what the code claims.** Reach for it whenever a claim needs proof against a live system: a click really fires its request, an error really shows on screen, a fix really changed what renders. `discover` and a code read tell you what SHOULD happen; siegelense tells you what DID.
 
 It boots a throwaway instance, drives it with a batch of steps, and reads back readings — console, network, screenshots, server logs — never a verdict. Comparing two readings to decide pass or fail is yours to do.
 
-**Start here:** `dungeonmaster siegelense docs --for <scope>` — `walking` (drive a browser and record what you see), `attacking` (stress it and measure what breaks), `fixing` (read a finished run's evidence and reproduce it), or `seeding` (start a headless instance, seed a recipe and read back what it really produced). `dungeonmaster siegelense <call> --help` gives one call's flags, refusals and example.
+**Start here:** `lockdown-kit siegelense docs --for <scope>` — `walking` (drive a browser and record what you see), `attacking` (stress it and measure what breaks), `fixing` (read a finished run's evidence and reproduce it), or `seeding` (start a headless instance, seed a recipe and read back what it really produced). `lockdown-kit siegelense <call> --help` gives one call's flags, refusals and example.
 
 ---
 
 ## Adding a Gateway npm or bin Wrapper
 
-Applies in a consumer repo `dungeonmaster init` has touched — this monorepo's gateway packages hold every wrapper.
+Applies in a consumer repo `lockdown-kit init` has touched — this monorepo's gateway packages hold every wrapper.
 
-**`packages/@gateway/npm/src/` fills itself.** `dungeonmaster init`, every bare `npm install` (the root `postinstall`), and the agent hook after `npm install <pkg>` give every `dependencies` entry, and every `devDependencies` entry something imports, a folder there: dungeonmaster's own wrapper when one fits your installed version and compiles, otherwise a one-line passthrough barrel plus its test. An untyped one (marker `GENERATED-UNTYPED-STAND-IN`) heals itself once the package ships types. Gateways are active configuring boundaries, not thin passthroughs. An existing folder is never overwritten, so edit a generated one freely. `dungeonmaster gateway-sync` runs the same sync by hand.
+**`packages/@gateway/npm/src/` fills itself.** `lockdown-kit init`, every bare `npm install` (the root `postinstall`), and the agent hook after `npm install <pkg>` give every `dependencies` entry, and every `devDependencies` entry something imports, a folder there: lockdown-kit's own wrapper when one fits your installed version and compiles, otherwise a one-line passthrough barrel plus its test. An untyped one (marker `GENERATED-UNTYPED-STAND-IN`) heals itself once the package ships types. An existing folder is never overwritten, so edit a generated one freely. `lockdown-kit gateway-sync` runs the same sync by hand.
 
-A barrel-only subpath needs no stub. Add a `.stub.ts` once you add a wrapper file. `packages/@gateway/node/` and `packages/@gateway/browser/` hold dungeonmaster's real source: a wrapper plus its `.proxy.ts` and `.stub.ts`. For dungeonmaster's OWN npm/bin wrappers, read `node_modules/@dungeonmaster/npm/src` and `node_modules/@dungeonmaster/bin/src` — both ship real source, not `dist` only.
+A barrel-only subpath needs no stub. Add a `.stub.ts` once you add a wrapper file. `packages/@gateway/node/` and `packages/@gateway/browser/` hold lockdown-kit's real source: a wrapper plus its `.proxy.ts` and `.stub.ts`. For lockdown-kit's OWN npm/bin wrappers, read `node_modules/@legendscribe/lockdown-kit-npm/src` and `node_modules/@legendscribe/lockdown-kit-bin/src` — both ship real source, not `dist` only.
 
 A package Jest cannot load gets a module mock beside its wrapper, `packages/@gateway/npm/src/<folder>/<folder>.jest-mock.cjs`, and Jest loads it for every test that imports that gateway, with no config edit.
 
 `packages/@gateway/bin/` starts EMPTY, holding only a placeholder `src/index.d.ts`. Write a program's wrapper under `packages/@gateway/bin/src/<subpath>/` by hand, and delete the placeholder once the first real subpath exists.
 
-**Never import dungeonmaster's own gateway.** A wrapper imports only the consumer's own copy — never `@dungeonmaster/{npm,node,browser,bin}` from `node_modules`. Read the installed package only to copy a shape from.
+**Never import lockdown-kit's own gateway.** A wrapper imports only the consumer's own copy — never `@legendscribe/lockdown-kit-{npm,node,browser,bin}` from `node_modules`. Read the installed package only to copy a shape from.
 
-`dungeonmaster create-package` refuses a name scoped `@gateway` — a wrapper is not a scaffolded package. Add the folder by hand instead.
+`lockdown-kit create-package` refuses a name scoped `@gateway` — a wrapper is not a scaffolded package. Add the folder by hand instead.
 
 ---
 
 ## Making Decisions
 
-Applies in any repo `dungeonmaster init` has touched.
+Applies in any repo `lockdown-kit init` has touched.
 
 **Measure before you choose a direction.** Planning a feature, weigh its performance and read the real system: real files, real sizes, real counts. A guess is not a direction.
 

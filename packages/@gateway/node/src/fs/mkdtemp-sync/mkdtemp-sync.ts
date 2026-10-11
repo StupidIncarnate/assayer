@@ -4,8 +4,8 @@
  * parent directory. Every OS error passes through raw.
  *
  * USAGE:
- * const dir = mkdtempSync('/tmp/dm-e2e-images-');
- * // Returns '/tmp/dm-e2e-images-a1B2c3', a directory that did not exist before the call
+ * const dir = mkdtempSync('/tmp/lk-e2e-images-');
+ * // Returns '/tmp/lk-e2e-images-a1B2c3', a directory that did not exist before the call
  */
 import { mkdtempSync as nodeMkdtempSync } from 'fs';
 

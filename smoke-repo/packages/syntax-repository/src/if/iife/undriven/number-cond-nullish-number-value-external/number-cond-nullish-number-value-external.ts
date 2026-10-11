@@ -4,16 +4,17 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - if then on line 25: never
- * - if else on line 25: never
- * - ternary then on line 25: never
- * - ternary else on line 25: never
+ * - if then on line 26: never
+ * - if else on line 26: driven
+ * - ternary then on line 26: driven
+ * - ternary else on line 26: never
  *
  * Expected lint errors:
  * - none
  *
  * Expected undriven errors:
- * - line 24
+ * - line 26
+ * - line 26
  *
  * Expected dark spot errors:
  * - none

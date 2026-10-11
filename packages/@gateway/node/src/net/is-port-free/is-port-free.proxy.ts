@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'net';
 import { EventEmitter } from 'events';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 interface StagedPort {
   port: number;

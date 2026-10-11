@@ -1,6 +1,6 @@
 import { mkdir, rename, unlink, writeFile } from 'fs/promises';
 import { dirname } from 'path';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import type { FsError } from '../../fs/is-fs-error/fs-error';
 
 export const writeFileAtomicProxy = (): {

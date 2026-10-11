@@ -1,5 +1,5 @@
 import { spawn } from 'child_process';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { ChildProcessStub } from '../child-process/child-process.stub';
 import { SpawnNotFoundRecordedErrorStub } from './spawn-not-found-recorded-error.stub';
 

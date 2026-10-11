@@ -5,7 +5,7 @@
  *
  * USAGE:
  * await appendLinesCreatingParent({
- *   path: '/repo/.dungeonmaster/event-outbox.jsonl',
+ *   path: '/repo/.ls-lockdown-kit/event-outbox.jsonl',
  *   lines: [JSON.stringify(event)],
  * });
  * // Creates the parent directory if missing, then appends "<line>\n" for each line

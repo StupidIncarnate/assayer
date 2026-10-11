@@ -4,7 +4,7 @@
  * empty" stay apart for a caller that has to tell them apart.
  *
  * USAGE:
- * await readdirIfExists('/repo/.dungeonmaster/quests');
+ * await readdirIfExists('/repo/.ls-lockdown-kit/quests');
  * // Returns every entry name, or null when the directory does not exist
  */
 

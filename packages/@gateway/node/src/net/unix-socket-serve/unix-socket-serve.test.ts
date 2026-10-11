@@ -8,35 +8,35 @@ describe('unixSocketServe', () => {
   describe('binding', () => {
     it('VALID: {fresh socket path} => creates the parent directory and resolves once listening', async () => {
       const proxy = unixSocketServeProxy();
-      proxy.listens({ socketPath: '/tmp/dm-sock/ok.sock' });
+      proxy.listens({ socketPath: '/tmp/lk-sock/ok.sock' });
 
       const server = await unixSocketServe({
-        socketPath: '/tmp/dm-sock/ok.sock',
+        socketPath: '/tmp/lk-sock/ok.sock',
         onRequestLine: async (line) => Promise.resolve(line),
       });
 
       expect({
         close: server.close,
-        mkdirs: proxy.getMkdirCallsFor({ socketPath: '/tmp/dm-sock/ok.sock' }),
-        unlinks: proxy.getUnlinkCallsFor({ socketPath: '/tmp/dm-sock/ok.sock' }),
+        mkdirs: proxy.getMkdirCallsFor({ socketPath: '/tmp/lk-sock/ok.sock' }),
+        unlinks: proxy.getUnlinkCallsFor({ socketPath: '/tmp/lk-sock/ok.sock' }),
       }).toStrictEqual({
         close: expect.any(Function),
-        mkdirs: [['/tmp/dm-sock', { recursive: true }]],
+        mkdirs: [['/tmp/lk-sock', { recursive: true }]],
         unlinks: [],
       });
     });
 
     it('VALID: {a stale socket file left by a dead peer} => unlinks it before binding', async () => {
       const proxy = unixSocketServeProxy();
-      proxy.listensOverStaleSocket({ socketPath: '/tmp/dm-sock/stale.sock' });
+      proxy.listensOverStaleSocket({ socketPath: '/tmp/lk-sock/stale.sock' });
 
       await unixSocketServe({
-        socketPath: '/tmp/dm-sock/stale.sock',
+        socketPath: '/tmp/lk-sock/stale.sock',
         onRequestLine: async (line) => Promise.resolve(line),
       });
 
-      expect(proxy.getUnlinkCallsFor({ socketPath: '/tmp/dm-sock/stale.sock' })).toStrictEqual([
-        ['/tmp/dm-sock/stale.sock'],
+      expect(proxy.getUnlinkCallsFor({ socketPath: '/tmp/lk-sock/stale.sock' })).toStrictEqual([
+        ['/tmp/lk-sock/stale.sock'],
       ]);
     });
 
@@ -44,13 +44,13 @@ describe('unixSocketServe', () => {
       const proxy = unixSocketServeProxy();
       const error = UnixSocketRecordedErrorStub({
         code: 'EADDRINUSE',
-        socketPath: '/tmp/dm-sock/held.sock',
+        socketPath: '/tmp/lk-sock/held.sock',
       });
-      proxy.listenFails({ socketPath: '/tmp/dm-sock/held.sock', error });
+      proxy.listenFails({ socketPath: '/tmp/lk-sock/held.sock', error });
 
       await expect(
         unixSocketServe({
-          socketPath: '/tmp/dm-sock/held.sock',
+          socketPath: '/tmp/lk-sock/held.sock',
           onRequestLine: async (line) => Promise.resolve(line),
         }),
       ).rejects.toBe(error);
@@ -60,12 +60,12 @@ describe('unixSocketServe', () => {
   describe('serving', () => {
     it('VALID: {onRequestLine resolving a value} => writes that value back to the client', async () => {
       const proxy = unixSocketServeProxy();
-      proxy.listens({ socketPath: '/tmp/dm-sock/ok.sock' });
+      proxy.listens({ socketPath: '/tmp/lk-sock/ok.sock' });
       await unixSocketServe({
-        socketPath: '/tmp/dm-sock/ok.sock',
+        socketPath: '/tmp/lk-sock/ok.sock',
         onRequestLine: async (line) => Promise.resolve(`handled:${line}`),
       });
-      const client = proxy.connectClient({ socketPath: '/tmp/dm-sock/ok.sock' });
+      const client = proxy.connectClient({ socketPath: '/tmp/lk-sock/ok.sock' });
 
       client.sendLine({ line: 'hello' });
       await new Promise((resolve) => {
@@ -77,12 +77,12 @@ describe('unixSocketServe', () => {
 
     it('ERROR: {onRequestLine throws} => writes an ERROR frame back instead of hanging the client', async () => {
       const proxy = unixSocketServeProxy();
-      proxy.listens({ socketPath: '/tmp/dm-sock/throws.sock' });
+      proxy.listens({ socketPath: '/tmp/lk-sock/throws.sock' });
       await unixSocketServe({
-        socketPath: '/tmp/dm-sock/throws.sock',
+        socketPath: '/tmp/lk-sock/throws.sock',
         onRequestLine: async () => Promise.reject(new Error('handler exploded')),
       });
-      const client = proxy.connectClient({ socketPath: '/tmp/dm-sock/throws.sock' });
+      const client = proxy.connectClient({ socketPath: '/tmp/lk-sock/throws.sock' });
 
       client.sendLine({ line: 'x' });
       await new Promise((resolve) => {
@@ -96,15 +96,15 @@ describe('unixSocketServe', () => {
   describe('closing', () => {
     it('VALID: {close} => closes the server bound on that path once', async () => {
       const proxy = unixSocketServeProxy();
-      proxy.listens({ socketPath: '/tmp/dm-sock/ok.sock' });
+      proxy.listens({ socketPath: '/tmp/lk-sock/ok.sock' });
       const server = await unixSocketServe({
-        socketPath: '/tmp/dm-sock/ok.sock',
+        socketPath: '/tmp/lk-sock/ok.sock',
         onRequestLine: async (line) => Promise.resolve(line),
       });
 
       await server.close();
 
-      expect(proxy.getCloseCountFor({ socketPath: '/tmp/dm-sock/ok.sock' })).toBe(1);
+      expect(proxy.getCloseCountFor({ socketPath: '/tmp/lk-sock/ok.sock' })).toBe(1);
     });
   });
 });

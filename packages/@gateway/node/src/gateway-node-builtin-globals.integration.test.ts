@@ -7,7 +7,7 @@
  * real platform names to compare folders against, not a source file a selector can parse.
  * The built-in module names are Node's own `builtinModules`, read through this gateway's `module`
  * subpath. A gateway file may import its own subpaths, and `gateway-import-boundary` (active, in the
- * gateway ESLint config block) still refuses ANY import of `@dungeonmaster/shared` from inside one,
+ * gateway ESLint config block) still refuses ANY import of `@legendscribe/lockdown-kit-shared` from inside one,
  * this test included, since the gateway is the bottom layer.
  * `nodeGlobalNamesForTest` is a SEPARATE maintained list this test owns outright (`builtinModules`
  * carries no Node globals, only modules) — extend it here when a gateway folder
@@ -17,8 +17,8 @@
  * duplicates, for the same reason — change both when it changes.
  *
  * `.integration.test.ts`, not `.test.ts`: this file has no single implementation companion —
- * `@dungeonmaster/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
- * `config-dungeonmaster-broker.ts`) only for `**\/src/*.integration.test.ts`.
+ * `@legendscribe/lockdown-kit/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
+ * `config-lockdown-kit-broker.ts`) only for `**\/src/*.integration.test.ts`.
  *
  * USAGE:
  * npm run ward -- --only integration -- packages/@gateway/node/src/gateway-node-builtin-globals.integration.test.ts

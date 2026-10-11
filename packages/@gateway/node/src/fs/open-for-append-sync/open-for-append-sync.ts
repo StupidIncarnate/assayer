@@ -6,7 +6,7 @@
  * process that opened it.
  *
  * USAGE:
- * const fd = openForAppendSync('/tmp/dm-siege-inst_7f3a9c21/api-server.log');
+ * const fd = openForAppendSync('/tmp/lk-siege-inst_7f3a9c21/api-server.log');
  * // Returns the open file descriptor, creating the file if it did not exist
  */
 import { openSync } from 'fs';

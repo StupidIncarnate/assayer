@@ -5,7 +5,7 @@
  * already removed it.
  *
  * USAGE:
- * await unlinkIfExists('/repo/.dungeonmaster/boot.lock');
+ * await unlinkIfExists('/repo/.ls-lockdown-kit/boot.lock');
  * // Removes the file; resolves without error when it does not exist
  */
 

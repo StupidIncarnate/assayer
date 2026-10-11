@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import type { SpyOnHandle } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { SpyOnHandle } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // A decode is addressed by its INPUT: an exact source (matched by identity, since spy addressing
 // compares objects by their own keys and every Blob has none) or a predicate over it, for a caller

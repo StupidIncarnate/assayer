@@ -15,7 +15,7 @@ describe('dynamicImport', () => {
   });
 
   it("ERROR: {path: a module that does not exist} => rejects with Node's own module-not-found error", async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dm-node-module-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lk-node-module-'));
     const missingPath = join(dir, 'does-not-exist.js');
 
     const caught: unknown = await dynamicImport({ path: missingPath }).catch(
@@ -30,7 +30,7 @@ describe('dynamicImport', () => {
   });
 
   it('ERROR: {path: a file with a syntax error} => rejects with a real SyntaxError, unreshaped', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dm-node-module-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lk-node-module-'));
     const brokenPath = join(dir, 'broken-syntax.js');
     writeFileSync(brokenPath, 'module.exports = {\n  value: 1\n');
 

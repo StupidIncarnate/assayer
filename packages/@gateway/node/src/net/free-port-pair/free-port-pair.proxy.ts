@@ -1,7 +1,7 @@
 import { createServer, type Server } from 'net';
 import { EventEmitter } from 'events';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // Built on a real EventEmitter (a single `as`, never `as unknown as`) rather than a hand-rolled
 // object literal — `Server` extends `EventEmitter`, so the real `.on()`/`.emit()` a caller attaches

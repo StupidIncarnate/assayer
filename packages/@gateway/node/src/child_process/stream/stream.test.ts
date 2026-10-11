@@ -119,20 +119,20 @@ describe('stream()', () => {
   describe('repeated calls to the same command', () => {
     it('VALID: {one child spawned per package, same command, different args} => getCallsFor reads back every call, in order', async () => {
       const proxy = streamProxy();
-      proxy.setupSuccess({ command: 'dungeonmaster-ward', exitCode: 0, stdout: '', stderr: '' });
+      proxy.setupSuccess({ command: 'lockdown-kit-ward', exitCode: 0, stdout: '', stderr: '' });
 
       await stream({
-        command: 'dungeonmaster-ward',
+        command: 'lockdown-kit-ward',
         args: ['run', '--only', 'unit'],
         cwd: '/repo/packages/hooks',
       });
       await stream({
-        command: 'dungeonmaster-ward',
+        command: 'lockdown-kit-ward',
         args: ['run', '--only', 'unit', '--', 'src/foo.ts'],
         cwd: '/repo/packages/ward',
       });
 
-      expect(proxy.getCallsFor({ command: 'dungeonmaster-ward' })).toStrictEqual([
+      expect(proxy.getCallsFor({ command: 'lockdown-kit-ward' })).toStrictEqual([
         ['run', '--only', 'unit'],
         ['run', '--only', 'unit', '--', 'src/foo.ts'],
       ]);

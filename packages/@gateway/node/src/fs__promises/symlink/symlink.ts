@@ -7,7 +7,7 @@
  * USAGE:
  * await symlink({
  *   target: '../../packages/orchestrator',
- *   path: '/worktrees/quest-slug/node_modules/@dungeonmaster/orchestrator',
+ *   path: '/worktrees/quest-slug/node_modules/@legendscribe/brutalpit-orchestrator',
  * });
  * // Creates path as a symlink pointing at target
  */

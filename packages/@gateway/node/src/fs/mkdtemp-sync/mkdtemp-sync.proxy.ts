@@ -1,5 +1,5 @@
 import { mkdtempSync } from 'fs';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 export const mkdtempSyncProxy = (): {
   returns: ({ prefix, dir }: { prefix: string; dir: string }) => void;

@@ -15,7 +15,7 @@ describe('#gateway/node/net', () => {
 
   describe('unixSocketServe and unixSocketRequest over a real socket', () => {
     it('VALID: {a server answering the request line} => the client resolves the line written back', async () => {
-      const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+      const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
       const socketPath = join(dir, 'nested', 'echo.sock');
       const server = await unixSocketServe({
         socketPath,
@@ -35,7 +35,7 @@ describe('#gateway/node/net', () => {
     });
 
     it('VALID: {a stale socket file left by a dead peer} => the second server unlinks it and rebinds', async () => {
-      const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+      const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
       const socketPath = join(dir, 'stale.sock');
       const firstServer = await unixSocketServe({
         socketPath,
@@ -56,7 +56,7 @@ describe('#gateway/node/net', () => {
     });
 
     it('ERROR: {onRequestLine throws} => the client reads an ERROR frame', async () => {
-      const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+      const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
       const socketPath = join(dir, 'throws.sock');
       const server = await unixSocketServe({
         socketPath,
@@ -72,7 +72,7 @@ describe('#gateway/node/net', () => {
     });
 
     it('ERROR: {peer never answers} => the client rejects with a timeout message after timeoutMs', async () => {
-      const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+      const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
       const socketPath = join(dir, 'silent.sock');
       const server = await unixSocketServe({
         socketPath,
@@ -96,7 +96,7 @@ describe('#gateway/node/net', () => {
     });
 
     it('ERROR: {socket path parent is not writable} => the server rejects with code EACCES', async () => {
-      const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+      const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
       chmodSync(dir, 0o500);
       const socketPath = join(dir, 'denied.sock');
 

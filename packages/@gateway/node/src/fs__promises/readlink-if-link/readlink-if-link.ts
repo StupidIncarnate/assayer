@@ -4,7 +4,7 @@
  * this to skip anything that is not a link without a thrown error interrupting the walk.
  *
  * USAGE:
- * await readlinkIfLink('/repo/.dungeonmaster-assets/siegelense-assets');
+ * await readlinkIfLink('/repo/.lockdown-kit-assets/siegelense-assets');
  * // Returns the stored target, or null when the path isn't a readable symlink
  */
 

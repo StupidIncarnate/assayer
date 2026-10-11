@@ -1,5 +1,5 @@
 import { statSync } from 'fs';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import type { Stats } from 'fs';
 import type { PathMatcher } from '../../gateway-test-support/path-matcher';
 

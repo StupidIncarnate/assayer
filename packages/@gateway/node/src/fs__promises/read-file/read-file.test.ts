@@ -6,18 +6,18 @@ describe('readFile', () => {
   describe('successful reads', () => {
     it('VALID: {path: existing file} => returns its contents', async () => {
       const proxy = readFileProxy();
-      proxy.returns({ path: '/repo/.dungeonmaster.json', contents: '{"port":3737}' });
+      proxy.returns({ path: '/repo/.lockdown-kit.json', contents: '{"port":3737}' });
 
-      const result = await readFile('/repo/.dungeonmaster.json');
+      const result = await readFile('/repo/.lockdown-kit.json');
 
       expect(result).toBe('{"port":3737}');
     });
 
     it('EMPTY: {path: an empty file} => returns an empty string', async () => {
       const proxy = readFileProxy();
-      proxy.returns({ path: '/repo/.dungeonmaster.json', contents: '' });
+      proxy.returns({ path: '/repo/.lockdown-kit.json', contents: '' });
 
-      const result = await readFile('/repo/.dungeonmaster.json');
+      const result = await readFile('/repo/.lockdown-kit.json');
 
       expect(result).toBe('');
     });
@@ -53,10 +53,10 @@ describe('readFile', () => {
 
     it('ERROR: {path: a parent segment that is a file} => rejects with the raw ENOTDIR error', async () => {
       const proxy = readFileProxy();
-      proxy.notADirectory({ path: '/repo/.dungeonmaster.json/nested' });
+      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
 
-      await expect(readFile('/repo/.dungeonmaster.json/nested')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.dungeonmaster.json/nested' }),
+      await expect(readFile('/repo/.lockdown-kit.json/nested')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' }),
       );
     });
   });
@@ -186,12 +186,12 @@ describe('readFile', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readFileProxy();
-      proxy.returns({ path: '/repo/.dungeonmaster.json', contents: '{"port":3737}' });
+      proxy.returns({ path: '/repo/.lockdown-kit.json', contents: '{"port":3737}' });
 
-      await readFile('/repo/.dungeonmaster.json');
+      await readFile('/repo/.lockdown-kit.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster.json' })).toStrictEqual([
-        ['/repo/.dungeonmaster.json', 'utf8'],
+      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
+        ['/repo/.lockdown-kit.json', 'utf8'],
       ]);
     });
   });

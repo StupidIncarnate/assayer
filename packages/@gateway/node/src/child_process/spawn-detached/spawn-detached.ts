@@ -9,9 +9,9 @@
  * USAGE:
  * const { pid, pgid } = spawnDetached({
  *   command: 'npm',
- *   args: ['run', 'dev:no-watch', '--workspace=@dungeonmaster/server'],
+ *   args: ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-server'],
  *   cwd: '/repo',
- *   env: { DUNGEONMASTER_PORT: '34172' },
+ *   env: { LOCKDOWN_KIT_PORT: '34172' },
  *   stdoutFd: 12,
  *   stderrFd: 12,
  * });

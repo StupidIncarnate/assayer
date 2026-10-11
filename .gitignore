@@ -30,5 +30,5 @@ playwright-report/
 .claude/worktrees/
 worktrees/
 .quest-plans/
-.dungeonmaster-assets/siegelense-assets
+.lockdown-kit-assets/siegelense-assets
 .ward-playwright-report*.json

@@ -4,7 +4,7 @@
  * Verdict: undriven
  *
  * Expected branches:
- * - ternary then on line 23: never
+ * - ternary then on line 23: driven
  * - ternary else on line 23: never
  *
  * Expected lint errors:

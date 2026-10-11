@@ -5,7 +5,7 @@
  * PrecheckRunResultStub();
  * // Returns a valid PrecheckRunResult
  */
-import type { StubArgument } from "@dungeonmaster/shared/@types";
+import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
 import { AssayerConfigStub } from "@assayer/shared/contracts/assayer-config/assayer-config.stub";
 
 import { precheckRunResultContract } from "./precheck-run-result-contract";

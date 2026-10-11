@@ -7,13 +7,13 @@ describe('readlinkIfLink', () => {
     it('VALID: {path: a symlink} => returns its stored target', async () => {
       const proxy = readlinkIfLinkProxy();
       proxy.returns({
-        path: '/repo/.dungeonmaster-assets/siegelense-assets',
-        target: '/home/user/.dungeonmaster/siegelense',
+        path: '/repo/.lockdown-kit-assets/siegelense-assets',
+        target: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
-      const result = await readlinkIfLink('/repo/.dungeonmaster-assets/siegelense-assets');
+      const result = await readlinkIfLink('/repo/.lockdown-kit-assets/siegelense-assets');
 
-      expect(result).toBe('/home/user/.dungeonmaster/siegelense');
+      expect(result).toBe('/home/user/.ls-lockdown-kit/siegelense');
     });
   });
 
@@ -31,9 +31,9 @@ describe('readlinkIfLink', () => {
   describe('not a link', () => {
     it('EDGE: {path: not a symlink} => returns null on EINVAL', async () => {
       const proxy = readlinkIfLinkProxy();
-      proxy.notALink({ path: '/repo/.dungeonmaster.json' });
+      proxy.notALink({ path: '/repo/.lockdown-kit.json' });
 
-      const result = await readlinkIfLink('/repo/.dungeonmaster.json');
+      const result = await readlinkIfLink('/repo/.lockdown-kit.json');
 
       expect(result).toBe(null);
     });
@@ -55,12 +55,12 @@ describe('readlinkIfLink', () => {
       const proxy = readlinkIfLinkProxy();
       proxy.returnsMatchingPath({
         path: (value) => String(value).endsWith('siegelense-assets'),
-        target: '/home/user/.dungeonmaster/siegelense',
+        target: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
       const result = await readlinkIfLink('/resolved/at/runtime/siegelense-assets');
 
-      expect(result).toBe('/home/user/.dungeonmaster/siegelense');
+      expect(result).toBe('/home/user/.ls-lockdown-kit/siegelense');
     });
 
     it('ERROR: {throwsMatchingPath, a predicate} => rejects with the staged error', async () => {
@@ -79,15 +79,15 @@ describe('readlinkIfLink', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readlinkIfLinkProxy();
       proxy.returns({
-        path: '/repo/.dungeonmaster-assets/siegelense-assets',
-        target: '/home/user/.dungeonmaster/siegelense',
+        path: '/repo/.lockdown-kit-assets/siegelense-assets',
+        target: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
-      await readlinkIfLink('/repo/.dungeonmaster-assets/siegelense-assets');
+      await readlinkIfLink('/repo/.lockdown-kit-assets/siegelense-assets');
 
       expect(
-        proxy.getCallsFor({ path: '/repo/.dungeonmaster-assets/siegelense-assets' }),
-      ).toStrictEqual([['/repo/.dungeonmaster-assets/siegelense-assets']]);
+        proxy.getCallsFor({ path: '/repo/.lockdown-kit-assets/siegelense-assets' }),
+      ).toStrictEqual([['/repo/.lockdown-kit-assets/siegelense-assets']]);
     });
   });
 });

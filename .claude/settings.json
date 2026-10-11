@@ -1,11 +1,4 @@
 {
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
-  },
-  "crossSessionInbound": "refuse",
-  "promptCacheTtl": "1h",
-  "subagentPromptCacheTtl": "1h",
-  "promptSuggestionEnabled": false,
   "hooks": {
     "PreToolUse": [
       {
@@ -13,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-pre-edit-lint"
+            "command": "lockdown-kit-pre-edit-lint"
           }
         ]
       },
@@ -22,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-pre-bash"
+            "command": "lockdown-kit-pre-bash"
           }
         ]
       },
@@ -31,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-pre-search"
+            "command": "lockdown-kit-pre-search"
           }
         ]
       },
@@ -40,36 +33,45 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-pre-folder-detail"
+            "command": "lockdown-kit-pre-folder-detail"
           }
         ]
       },
       {
-        "matcher": "mcp__dungeonmaster__.*",
+        "matcher": "mcp__lockdown-kit__.*",
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-pre-mcp-caller"
+            "command": "lockdown-kit-pre-mcp-caller"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "brutalpit-pre-bash"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__brutalpit__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "brutalpit-pre-mcp-caller"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "dungeonmaster-post-ask-question"
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-post-bash",
+            "command": "lockdown-kit-post-bash",
             "timeout": 300
           }
         ]
@@ -80,7 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet discover"
+            "command": "lockdown-kit-session-snippet discover"
           }
         ]
       },
@@ -88,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet searchStrategy"
+            "command": "lockdown-kit-session-snippet searchStrategy"
           }
         ]
       },
@@ -96,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet reportingFindings"
+            "command": "lockdown-kit-session-snippet reportingFindings"
           }
         ]
       },
@@ -104,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet folderTypes"
+            "command": "lockdown-kit-session-snippet folderTypes"
           }
         ]
       },
@@ -112,7 +114,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet modifyingCodeGuidance"
+            "command": "lockdown-kit-session-snippet modifyingCodeGuidance"
           }
         ]
       },
@@ -120,7 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet ward"
+            "command": "lockdown-kit-session-snippet ward"
           }
         ]
       },
@@ -128,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet wardDiscipline"
+            "command": "lockdown-kit-session-snippet wardDiscipline"
           }
         ]
       },
@@ -136,7 +138,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet packages"
+            "command": "lockdown-kit-session-snippet packages"
           }
         ]
       },
@@ -144,7 +146,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet backgroundTasks"
+            "command": "lockdown-kit-session-snippet backgroundTasks"
           }
         ]
       },
@@ -152,7 +154,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet commentDiscipline"
+            "command": "lockdown-kit-session-snippet commentDiscipline"
           }
         ]
       },
@@ -160,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet buildDiscipline"
+            "command": "lockdown-kit-session-snippet buildDiscipline"
           }
         ]
       },
@@ -168,7 +170,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet worktrees"
+            "command": "lockdown-kit-session-snippet worktrees"
           }
         ]
       },
@@ -176,7 +178,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet generatedConfig"
+            "command": "lockdown-kit-session-snippet generatedConfig"
           }
         ]
       },
@@ -184,7 +186,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet siegelense"
+            "command": "lockdown-kit-session-snippet siegelense"
           }
         ]
       },
@@ -192,7 +194,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet consumerGatewayWrapper"
+            "command": "lockdown-kit-session-snippet consumerGatewayWrapper"
           }
         ]
       },
@@ -200,7 +202,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet decisionMaking"
+            "command": "lockdown-kit-session-snippet decisionMaking"
           }
         ]
       }
@@ -210,7 +212,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet discover"
+            "command": "lockdown-kit-session-snippet discover"
           }
         ]
       },
@@ -218,7 +220,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet searchStrategy"
+            "command": "lockdown-kit-session-snippet searchStrategy"
           }
         ]
       },
@@ -226,7 +228,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet reportingFindings"
+            "command": "lockdown-kit-session-snippet reportingFindings"
           }
         ]
       },
@@ -234,7 +236,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet folderTypes"
+            "command": "lockdown-kit-session-snippet folderTypes"
           }
         ]
       },
@@ -242,7 +244,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet modifyingCodeGuidance"
+            "command": "lockdown-kit-session-snippet modifyingCodeGuidance"
           }
         ]
       },
@@ -250,7 +252,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet ward"
+            "command": "lockdown-kit-session-snippet ward"
           }
         ]
       },
@@ -258,7 +260,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet wardDiscipline"
+            "command": "lockdown-kit-session-snippet wardDiscipline"
           }
         ]
       },
@@ -266,7 +268,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet packages"
+            "command": "lockdown-kit-session-snippet packages"
           }
         ]
       },
@@ -274,7 +276,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet backgroundTasks"
+            "command": "lockdown-kit-session-snippet backgroundTasks"
           }
         ]
       },
@@ -282,7 +284,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet commentDiscipline"
+            "command": "lockdown-kit-session-snippet commentDiscipline"
           }
         ]
       },
@@ -290,7 +292,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet buildDiscipline"
+            "command": "lockdown-kit-session-snippet buildDiscipline"
           }
         ]
       },
@@ -298,7 +300,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet worktrees"
+            "command": "lockdown-kit-session-snippet worktrees"
           }
         ]
       },
@@ -306,7 +308,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet generatedConfig"
+            "command": "lockdown-kit-session-snippet generatedConfig"
           }
         ]
       },
@@ -314,7 +316,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet siegelense"
+            "command": "lockdown-kit-session-snippet siegelense"
           }
         ]
       },
@@ -322,7 +324,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet consumerGatewayWrapper"
+            "command": "lockdown-kit-session-snippet consumerGatewayWrapper"
           }
         ]
       },
@@ -330,18 +332,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-session-snippet decisionMaking"
+            "command": "lockdown-kit-session-snippet decisionMaking"
           }
         ]
       }
     ],
-    "SubagentStop": [],
     "WorktreeCreate": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "dungeonmaster-worktree-create"
+            "command": "lockdown-kit-worktree-create"
           }
         ]
       }
@@ -349,29 +350,6 @@
   },
   "permissions": {
     "allow": [
-      "mcp__dungeonmaster__discover",
-      "mcp__dungeonmaster__get-architecture",
-      "mcp__dungeonmaster__get-folder-detail",
-      "mcp__dungeonmaster__get-testing-patterns",
-      "mcp__dungeonmaster__get-quest",
-      "mcp__dungeonmaster__modify-quest",
-      "mcp__dungeonmaster__signal-back",
-      "mcp__dungeonmaster__start-quest",
-      "mcp__dungeonmaster__get-quest-status",
-      "mcp__dungeonmaster__list-quests",
-      "mcp__dungeonmaster__list-guilds",
-      "mcp__dungeonmaster__get-agent-prompt",
-      "mcp__dungeonmaster__get-project-map",
-      "mcp__dungeonmaster__get-quest-planning-notes",
-      "mcp__dungeonmaster__get-project-inventory",
-      "mcp__dungeonmaster__create-quest",
-      "mcp__dungeonmaster__get-server-config",
-      "mcp__dungeonmaster__ask-user-question",
-      "mcp__dungeonmaster__get-blight-checklist",
-      "mcp__dungeonmaster__get-quest-summary",
-      "mcp__dungeonmaster__create-worktree",
-      "mcp__dungeonmaster__quest-work",
-      "mcp__dungeonmaster__get-quest-work",
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",
@@ -387,12 +365,41 @@
       "Bash(git merge-base:*)",
       "mcp__claude-in-chrome",
       "Bash(curl:*)",
-      "Bash(dungeonmaster siegelense:*)",
       "Bash(kill:*)",
       "Bash(lsof:*)",
       "Bash(ps:*)",
       "Bash(python3:*)",
-      "mcp__dungeonmaster__get-quest-health"
+      "mcp__lockdown-kit__discover",
+      "mcp__lockdown-kit__get-architecture",
+      "mcp__lockdown-kit__get-folder-detail",
+      "mcp__lockdown-kit__get-testing-patterns",
+      "mcp__lockdown-kit__get-project-map",
+      "mcp__lockdown-kit__get-project-inventory",
+      "mcp__lockdown-kit__create-worktree",
+      "Bash(lockdown-kit siegelense:*)",
+      "mcp__brutalpit__get-quest",
+      "mcp__brutalpit__modify-quest",
+      "mcp__brutalpit__signal-back",
+      "mcp__brutalpit__start-quest",
+      "mcp__brutalpit__get-quest-status",
+      "mcp__brutalpit__list-quests",
+      "mcp__brutalpit__list-guilds",
+      "mcp__brutalpit__ask-user-question",
+      "mcp__brutalpit__get-agent-prompt",
+      "mcp__brutalpit__get-quest-planning-notes",
+      "mcp__brutalpit__get-blight-checklist",
+      "mcp__brutalpit__get-server-config",
+      "mcp__brutalpit__get-quest-summary",
+      "mcp__brutalpit__quest-work",
+      "mcp__brutalpit__get-quest-work",
+      "mcp__brutalpit__get-quest-health"
     ]
-  }
+  },
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "crossSessionInbound": "refuse",
+  "promptCacheTtl": "1h",
+  "subagentPromptCacheTtl": "1h",
+  "promptSuggestionEnabled": false
 }

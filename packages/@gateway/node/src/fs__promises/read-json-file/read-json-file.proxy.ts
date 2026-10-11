@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { FsErrorStub } from '../../fs/is-fs-error/fs-error.stub';
 import type { FsError } from '../../fs/is-fs-error/fs-error';
 import type { PathMatcher } from '../../gateway-test-support/path-matcher';

@@ -1,5 +1,5 @@
 import { spawnSync, type SpawnSyncReturns } from 'child_process';
-import { registerMock } from '@dungeonmaster/testing/register-mock';
+import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 interface SpawnedCall {
   command: string;

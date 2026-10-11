@@ -7,9 +7,9 @@ describe('readFileBytesSync', () => {
     it('VALID: {path: existing binary file} => returns its raw bytes as a Buffer', () => {
       const proxy = readFileBytesSyncProxy();
       const bytes = Buffer.from([137, 80, 78, 71]);
-      proxy.returns({ path: '/repo/.dungeonmaster-assets/step7.png', bytes });
+      proxy.returns({ path: '/repo/.lockdown-kit-assets/step7.png', bytes });
 
-      const result = readFileBytesSync('/repo/.dungeonmaster-assets/step7.png');
+      const result = readFileBytesSync('/repo/.lockdown-kit-assets/step7.png');
 
       expect(result).toStrictEqual(bytes);
     });
@@ -17,9 +17,9 @@ describe('readFileBytesSync', () => {
     it('EMPTY: {path: an empty file} => returns an empty buffer', () => {
       const proxy = readFileBytesSyncProxy();
       const bytes = Buffer.from([]);
-      proxy.returns({ path: '/repo/.dungeonmaster-assets/empty.png', bytes });
+      proxy.returns({ path: '/repo/.lockdown-kit-assets/empty.png', bytes });
 
-      const result = readFileBytesSync('/repo/.dungeonmaster-assets/empty.png');
+      const result = readFileBytesSync('/repo/.lockdown-kit-assets/empty.png');
 
       expect(result).toStrictEqual(bytes);
     });
@@ -97,12 +97,12 @@ describe('readFileBytesSync', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', () => {
       const proxy = readFileBytesSyncProxy();
       const bytes = Buffer.from([137, 80, 78, 71]);
-      proxy.returns({ path: '/repo/.dungeonmaster-assets/step7.png', bytes });
+      proxy.returns({ path: '/repo/.lockdown-kit-assets/step7.png', bytes });
 
-      readFileBytesSync('/repo/.dungeonmaster-assets/step7.png');
+      readFileBytesSync('/repo/.lockdown-kit-assets/step7.png');
 
-      expect(proxy.getCallsFor({ path: '/repo/.dungeonmaster-assets/step7.png' })).toStrictEqual([
-        ['/repo/.dungeonmaster-assets/step7.png'],
+      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit-assets/step7.png' })).toStrictEqual([
+        ['/repo/.lockdown-kit-assets/step7.png'],
       ]);
     });
   });

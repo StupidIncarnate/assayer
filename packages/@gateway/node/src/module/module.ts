@@ -10,7 +10,7 @@
  *
  * USAGE:
  * import { createRequire, resolvePackageRoot } from '#gateway/node/module';
- * resolvePackageRoot({ specifier: '@dungeonmaster/shared/contracts' });
+ * resolvePackageRoot({ specifier: '@legendscribe/lockdown-kit-shared/contracts' });
  */
 
 export { createRequire, builtinModules } from 'module';

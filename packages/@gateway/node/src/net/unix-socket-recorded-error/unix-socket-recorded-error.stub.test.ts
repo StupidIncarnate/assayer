@@ -7,7 +7,7 @@ import { UnixSocketRecordedErrorStub } from './unix-socket-recorded-error.stub';
 
 describe('UnixSocketRecordedErrorStub', () => {
   it('VALID: {code: ENOENT} => matches a real request to a socket file that never existed', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
     const socketPath = join(dir, 'missing.sock');
 
     const caught: unknown = await unixSocketRequest({
@@ -26,7 +26,7 @@ describe('UnixSocketRecordedErrorStub', () => {
   });
 
   it('VALID: {code: ECONNREFUSED} => matches a real request to a socket file nothing listens on', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
     const socketPath = join(dir, 'stale.sock');
     writeFileSync(socketPath, '');
 
@@ -46,7 +46,7 @@ describe('UnixSocketRecordedErrorStub', () => {
   });
 
   it('VALID: {code: EADDRINUSE} => matches a real second listen on a held socket path', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'dm-node-net-'));
+    const dir = mkdtempSync(join(tmpdir(), 'lk-node-net-'));
     const socketPath = join(dir, 'held.sock');
     const holder = createServer();
     await new Promise<void>((resolve) => {

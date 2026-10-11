@@ -7,13 +7,13 @@ describe('realpath', () => {
     it('VALID: {path: a chain of symlinks} => returns the fully resolved path', async () => {
       const proxy = realpathProxy();
       proxy.returns({
-        path: '/repo/.dungeonmaster-assets/siegelense-assets',
-        resolved: '/home/user/.dungeonmaster/siegelense',
+        path: '/repo/.lockdown-kit-assets/siegelense-assets',
+        resolved: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
-      const result = await realpath('/repo/.dungeonmaster-assets/siegelense-assets');
+      const result = await realpath('/repo/.lockdown-kit-assets/siegelense-assets');
 
-      expect(result).toBe('/home/user/.dungeonmaster/siegelense');
+      expect(result).toBe('/home/user/.ls-lockdown-kit/siegelense');
     });
   });
 
@@ -38,10 +38,10 @@ describe('realpath', () => {
 
     it('ERROR: {path: a parent segment that is a file} => rejects with the raw ENOTDIR error', async () => {
       const proxy = realpathProxy();
-      proxy.notADirectory({ path: '/repo/.dungeonmaster.json/nested' });
+      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
 
-      await expect(realpath('/repo/.dungeonmaster.json/nested')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.dungeonmaster.json/nested' }),
+      await expect(realpath('/repo/.lockdown-kit.json/nested')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' }),
       );
     });
   });
@@ -51,12 +51,12 @@ describe('realpath', () => {
       const proxy = realpathProxy();
       proxy.returnsMatchingPath({
         path: (value) => String(value).endsWith('siegelense-assets'),
-        resolved: '/home/user/.dungeonmaster/siegelense',
+        resolved: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
       const result = await realpath('/resolved/at/runtime/siegelense-assets');
 
-      expect(result).toBe('/home/user/.dungeonmaster/siegelense');
+      expect(result).toBe('/home/user/.ls-lockdown-kit/siegelense');
     });
 
     it('ERROR: {throwsMatchingPath, a predicate} => rejects with the staged error', async () => {
@@ -75,15 +75,15 @@ describe('realpath', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = realpathProxy();
       proxy.returns({
-        path: '/repo/.dungeonmaster-assets/siegelense-assets',
-        resolved: '/home/user/.dungeonmaster/siegelense',
+        path: '/repo/.lockdown-kit-assets/siegelense-assets',
+        resolved: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
-      await realpath('/repo/.dungeonmaster-assets/siegelense-assets');
+      await realpath('/repo/.lockdown-kit-assets/siegelense-assets');
 
       expect(
-        proxy.getCallsFor({ path: '/repo/.dungeonmaster-assets/siegelense-assets' }),
-      ).toStrictEqual([['/repo/.dungeonmaster-assets/siegelense-assets']]);
+        proxy.getCallsFor({ path: '/repo/.lockdown-kit-assets/siegelense-assets' }),
+      ).toStrictEqual([['/repo/.lockdown-kit-assets/siegelense-assets']]);
     });
   });
 });

@@ -3,7 +3,7 @@
  * for a caller that needs to skip non-directories or non-files while walking a tree.
  *
  * USAGE:
- * await readdirEntries('/repo/.dungeonmaster/quests');
+ * await readdirEntries('/repo/.ls-lockdown-kit/quests');
  * // Returns [{ name, kind }, ...]; [] for an empty directory; rejects on every failure
  */
 

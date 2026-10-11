@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { PassThrough } from 'stream';
-import { registerMock, registerSpyOn } from '@dungeonmaster/testing/register-mock';
+import { registerMock, registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
 import { ChildProcessStub } from '../child-process/child-process.stub';
 
 // A caller composing this proxy for a program that takes an argument only known at test-run time

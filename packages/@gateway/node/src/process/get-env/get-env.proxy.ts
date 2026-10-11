@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
 import * as getEnvModule from './get-env';
 
 // The wrapper's own module is the seam a caller's test stages, addressed by the exact variable name.

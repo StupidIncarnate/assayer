@@ -48,10 +48,10 @@
     "prepack": "node ../../scripts/build-workspaces.mjs --tsc-only",
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
-    "test": "dungeonmaster-ward --only test",
-    "typecheck": "dungeonmaster-ward --only typecheck",
-    "lint": "dungeonmaster-ward --only lint",
-    "ward": "dungeonmaster-ward"
+    "test": "lockdown-kit-ward --only test",
+    "typecheck": "lockdown-kit-ward --only typecheck",
+    "lint": "lockdown-kit-ward --only lint",
+    "ward": "lockdown-kit-ward"
   },
   "dependencies": {
     "@assayer/bin": "*",

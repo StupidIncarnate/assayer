@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import type { SpyOnHandle } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { SpyOnHandle } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 import { Canvas2dContextStub } from '../canvas-2d-context.stub';
 

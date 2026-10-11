@@ -18,10 +18,10 @@ describe('UrlStub', () => {
   });
 
   it('VALID: {href} => a real URL parsed from the given href', () => {
-    const url = UrlStub({ href: 'https://dungeonmaster.dev/guild/123' });
+    const url = UrlStub({ href: 'https://lockdown-kit.dev/guild/123' });
 
     expect({ hostname: url.hostname, pathname: url.pathname }).toStrictEqual({
-      hostname: 'dungeonmaster.dev',
+      hostname: 'lockdown-kit.dev',
       pathname: '/guild/123',
     });
   });

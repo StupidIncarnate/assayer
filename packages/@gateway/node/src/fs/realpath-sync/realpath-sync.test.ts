@@ -7,12 +7,12 @@ describe('realpathSync', () => {
     it('VALID: {path: a chain of symlinks} => returns the fully resolved path', () => {
       const proxy = realpathSyncProxy();
       proxy.returns({
-        path: '/repo/.dungeonmaster-assets/siegelense-assets',
-        resolved: '/home/user/.dungeonmaster/siegelense',
+        path: '/repo/.lockdown-kit-assets/siegelense-assets',
+        resolved: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
-      expect(realpathSync('/repo/.dungeonmaster-assets/siegelense-assets')).toBe(
-        '/home/user/.dungeonmaster/siegelense',
+      expect(realpathSync('/repo/.lockdown-kit-assets/siegelense-assets')).toBe(
+        '/home/user/.ls-lockdown-kit/siegelense',
       );
     });
   });
@@ -48,11 +48,11 @@ describe('realpathSync', () => {
       const proxy = realpathSyncProxy();
       proxy.returnsMatchingPath({
         path: (value) => String(value).endsWith('siegelense-assets'),
-        resolved: '/home/user/.dungeonmaster/siegelense',
+        resolved: '/home/user/.ls-lockdown-kit/siegelense',
       });
 
       expect(realpathSync('/resolved/at/runtime/siegelense-assets')).toBe(
-        '/home/user/.dungeonmaster/siegelense',
+        '/home/user/.ls-lockdown-kit/siegelense',
       );
     });
 

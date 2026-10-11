@@ -7,11 +7,11 @@ describe('readlink', () => {
     it('VALID: {path: a symlink} => returns its stored, unresolved target', async () => {
       const proxy = readlinkProxy();
       proxy.returns({
-        path: '/worktree/node_modules/@dungeonmaster/orchestrator',
+        path: '/worktree/node_modules/@legendscribe/brutalpit-orchestrator',
         target: '../../../packages/orchestrator',
       });
 
-      const result = await readlink('/worktree/node_modules/@dungeonmaster/orchestrator');
+      const result = await readlink('/worktree/node_modules/@legendscribe/brutalpit-orchestrator');
 
       expect(result).toBe('../../../packages/orchestrator');
     });
@@ -38,10 +38,10 @@ describe('readlink', () => {
 
     it('ERROR: {path: not a symlink} => rejects with the raw EINVAL error', async () => {
       const proxy = readlinkProxy();
-      proxy.notALink({ path: '/repo/.dungeonmaster.json' });
+      proxy.notALink({ path: '/repo/.lockdown-kit.json' });
 
-      await expect(readlink('/repo/.dungeonmaster.json')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'EINVAL', path: '/repo/.dungeonmaster.json' }),
+      await expect(readlink('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'EINVAL', path: '/repo/.lockdown-kit.json' }),
       );
     });
   });
@@ -75,15 +75,15 @@ describe('readlink', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readlinkProxy();
       proxy.returns({
-        path: '/worktree/node_modules/@dungeonmaster/orchestrator',
+        path: '/worktree/node_modules/@legendscribe/brutalpit-orchestrator',
         target: '../../../packages/orchestrator',
       });
 
-      await readlink('/worktree/node_modules/@dungeonmaster/orchestrator');
+      await readlink('/worktree/node_modules/@legendscribe/brutalpit-orchestrator');
 
       expect(
-        proxy.getCallsFor({ path: '/worktree/node_modules/@dungeonmaster/orchestrator' }),
-      ).toStrictEqual([['/worktree/node_modules/@dungeonmaster/orchestrator']]);
+        proxy.getCallsFor({ path: '/worktree/node_modules/@legendscribe/brutalpit-orchestrator' }),
+      ).toStrictEqual([['/worktree/node_modules/@legendscribe/brutalpit-orchestrator']]);
     });
   });
 });

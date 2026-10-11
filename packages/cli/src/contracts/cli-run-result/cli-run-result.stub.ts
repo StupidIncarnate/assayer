@@ -1,4 +1,4 @@
-import type { StubArgument } from '@dungeonmaster/shared/@types';
+import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
 
 import { cliRunResultContract } from './cli-run-result-contract';
 import type { CliRunResult } from './cli-run-result-contract';

@@ -1,5 +1,5 @@
-import { registerSpyOn } from '@dungeonmaster/testing/register-mock';
-import type { RecordedCalls } from '@dungeonmaster/testing/register-mock';
+import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
 
 // process.on really would attach a live signal listener for the rest of the suite, so every
 // scenario spies on it instead of letting it run.

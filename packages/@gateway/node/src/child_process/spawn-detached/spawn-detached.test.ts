@@ -36,7 +36,7 @@ describe('spawnDetached()', () => {
         command: 'npm',
         args: ['run', 'dev:no-watch'],
         cwd: '/repo',
-        env: { DUNGEONMASTER_PORT: '34172' },
+        env: { LOCKDOWN_KIT_PORT: '34172' },
         stdoutFd: 12,
         stderrFd: 13,
       });
@@ -46,7 +46,7 @@ describe('spawnDetached()', () => {
       ).toStrictEqual([
         {
           cwd: '/repo',
-          env: { DUNGEONMASTER_PORT: '34172' },
+          env: { LOCKDOWN_KIT_PORT: '34172' },
           detached: true,
           stdio: ['ignore', 12, 13],
         },
@@ -57,27 +57,27 @@ describe('spawnDetached()', () => {
       const proxy = spawnDetachedProxy();
       proxy.setupSuccess({
         command: 'npm',
-        args: ['run', 'dev:no-watch', '--workspace=@dungeonmaster/server'],
+        args: ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-server'],
         cwd: '/repo',
         pid: 4821,
       });
       proxy.setupSuccess({
         command: 'npm',
-        args: ['run', 'dev:no-watch', '--workspace=@dungeonmaster/web'],
+        args: ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-web'],
         cwd: '/repo',
         pid: 4822,
       });
 
       const server = spawnDetached({
         command: 'npm',
-        args: ['run', 'dev:no-watch', '--workspace=@dungeonmaster/server'],
+        args: ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-server'],
         cwd: '/repo',
         stdoutFd: 12,
         stderrFd: 12,
       });
       const web = spawnDetached({
         command: 'npm',
-        args: ['run', 'dev:no-watch', '--workspace=@dungeonmaster/web'],
+        args: ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-web'],
         cwd: '/repo',
         stdoutFd: 14,
         stderrFd: 14,
@@ -88,8 +88,8 @@ describe('spawnDetached()', () => {
         web: { pid: 4822, pgid: 4822 },
       });
       expect(proxy.getCallsFor({ command: 'npm' }).map((call) => call[1])).toStrictEqual([
-        ['run', 'dev:no-watch', '--workspace=@dungeonmaster/server'],
-        ['run', 'dev:no-watch', '--workspace=@dungeonmaster/web'],
+        ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-server'],
+        ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-web'],
       ]);
     });
 

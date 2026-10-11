@@ -1,6 +1,6 @@
 // A jsdom environment: this package wraps browser globals (fetch, localStorage, WebSocket,
 // indexedDB, document, ...), none of which exist under the base config's Node environment.
-const base = require('@dungeonmaster/testing/jest-config-base');
+const base = require('@legendscribe/lockdown-kit-testing/jest-config-base');
 
 module.exports = {
   ...base,
@@ -10,11 +10,11 @@ module.exports = {
     // MSW's Node server in `setupFilesAfterEnv`, and under `browser` it pulls @mswjs/interceptors'
     // ES-module browser build, which Jest cannot load. `gateway-source` points another gateway
     // package at its TypeScript source, and only the gateway packages' `exports` carry it.
-    // `source` stays out: it would point @dungeonmaster/testing's own entry at its `src/` while the
+    // `source` stays out: it would point @legendscribe/lockdown-kit-testing's own entry at its `src/` while the
     // base's setup file loads `dist/`, so a test would stage responses on a second MSW server that
     // never answers.
     customExportConditions: ['gateway-source', 'node', 'require', 'default'],
     url: 'http://localhost',
   },
-  setupFiles: ['@dungeonmaster/testing/jsdom-polyfills'],
+  setupFiles: ['@legendscribe/lockdown-kit-testing/jsdom-polyfills'],
 };
