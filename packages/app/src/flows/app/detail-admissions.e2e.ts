@@ -70,10 +70,17 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     // one `undriven.length` apart.
     await expect(window.getByTestId('TESTS_EMPTY')).toHaveCount(0);
 
-    // The derived cases are real analyzer output and nothing will ever execute them, so the panel
-    // must not advertise them as pending tests, nor offer a Run whose verdict it already states in
-    // full. Both controls are absent because there is nothing here to drive.
-    await expect(window.getByTestId('TEST_CASE_ROW')).toHaveCount(0);
+    // The two routes through the opaque `Math.random()` branch are declared, so the panel lists them
+    // under BOTH labelled sets: "Every route" and "Fewest runs", two routes each. Assayer cannot steer
+    // the branch, so every one is marked undriven and none of them runs: the rows read data-driven
+    // false and data-running false, and the panel offers no Run whose verdict it already states in full.
+    await expect(window.getByTestId('CASE_SET_LABEL')).toHaveText(['Every route · 2', 'Fewest runs · 2']);
+    const everyRouteRows = window.locator('[data-testid="CASE_SET"][data-set="every-route"] [data-testid="TEST_CASE_ROW"]');
+    await expect(everyRouteRows).toHaveCount(2);
+    await expect(window.getByTestId('FEWEST_RUNS_ROW')).toHaveCount(2);
+    await expect(window.getByTestId('CASE_UNDRIVEN')).toHaveText(['undriven', 'undriven']);
+    await expect(window.getByTestId('FEWEST_RUNS_UNDRIVEN')).toHaveText(['undriven', 'undriven']);
+    await expect(window.locator('[data-driven="true"], [data-running="true"]')).toHaveCount(0);
     await expect(window.getByTestId('RUN_BUTTON')).toHaveCount(0);
   });
 

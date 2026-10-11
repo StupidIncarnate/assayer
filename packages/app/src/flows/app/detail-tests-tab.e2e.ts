@@ -341,54 +341,48 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
       '  => 6: (not run)',
     ]);
 
-    // Composition — a `switch` nested inside an `if`: the FULL bucket set crosses `if (enabled)` with
-    // the switch arms, so the disabled path converges TWO buckets on the same trailing exit — one grayed.
+    // Composition — a `switch` nested inside an `if`: a route takes one arm at every branch it meets. The
+    // switch is met only when `enabled` is true, so the routes are enabled+get, enabled+post and disabled:
+    // 3 cases, with no second disabled route.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SWITCH_IN_IF}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(enabled, method) · 4 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('route(enabled, method) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run route(false, "get")',
-      'not run route(false, "post")',
       'not run route(true, "get")',
       'not run route(true, "post")',
     ]);
     expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
       '  => 11: (not run)',
-      '  => 11: (not run)',
       '  => 5: (not run)',
       '  => 7: (not run)',
     ]);
 
-    // Composition — an `if` nested inside a `switch`: the FULL bucket set crosses the switch arms with
-    // the inner `if (size > 5)`, so the non-'get' path converges TWO buckets on its exit — one grayed.
+    // Composition — an `if` nested inside a `switch`: the inner `if (size > 5)` is met only on the 'get'
+    // arm, so the routes are get+big, get+small and the default: 3 cases, with no second default route.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_IN_SWITCH}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('describeRoute(method, size) · 4 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('describeRoute(method, size) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run describeRoute("get", 5)',
       'not run describeRoute("get", 6)',
-      'not run describeRoute("post", 5)',
-      'not run describeRoute("post", 6)',
+      'not run describeRoute("post", 7)',
     ]);
     expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
-      '  => 10: (not run)',
       '  => 10: (not run)',
       '  => 5: (not run)',
       '  => 8: (not run)',
     ]);
 
-    // Composition — a fall-through `switch` inside an `if`: read-accounted vs read-terminal keep it at one
-    // convergent exit, but the FULL input-bucket set is the cross product of both branches' arms — four
-    // buckets, all reaching the one trailing `return 1` (L11). Fewest runs keeps the first.
-    // the other three are the grayed breadth. The title carries the full count.
+    // Composition — a fall-through `switch` inside an `if`: the switch is met only when `value > 5`, so
+    // the routes are big+'a', big+default and small: 3 cases, all reaching the one trailing `return 1`
+    // (L11). The title carries the every-route count.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${FALLTHROUGH_IN_IF}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('tally(value, mode) · 4 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('tally(value, mode) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
-      'not run tally(5, "a")',
       'not run tally(5, "abc123")',
       'not run tally(6, "a")',
       'not run tally(6, "abc123")',
     ]);
     expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
-      '  => 11: (not run)',
       '  => 11: (not run)',
       '  => 11: (not run)',
       '  => 11: (not run)',
@@ -454,36 +448,32 @@ test.describe('Compiled Surface Explorer — Tests tab', () => {
     ]);
 
     // Assumed ternary `||` chain — `a || b || 'default'` flattens its left spine to one branch per
-    // controlling operand. The FULL bucket set is the cross product of both operands' truthiness, so the
-    // a-truthy path converges TWO buckets (b either way) on the same exit — one is the grayed twin.
+    // controlling operand. `b` is met only when `a` is falsy, so the routes are a truthy, a falsy + b
+    // truthy, and both falsy: 3 cases, all on L2.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_OR_CHAIN}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pick(a, b) · 4 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('pick(a, b) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run pick("", "")',
       'not run pick("", "abc123")',
-      'not run pick("abc123", "")',
       'not run pick("abc123", "abc123")',
     ]);
     expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
       '  => 2: (not run)',
       '  => 2: (not run)',
       '  => 2: (not run)',
-      '  => 2: (not run)',
     ]);
 
     // Assumed ternary `&&` chain — the mirror: each operand's FALSY case short-circuits, the all-truthy
-    // path falls through to the last operand. The FULL bucket set carries the a-falsy path with b either
-    // way, so two buckets converge on the same short-circuit exit — one is the grayed twin.
+    // path falls through to the last operand. `b` is met only when `a` is truthy, so the routes are a
+    // falsy, a truthy + b falsy, and both truthy: 3 cases, all on L2.
     await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${SHORT_CIRCUIT_AND_CHAIN}"]`).click();
-    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('all(a, b, c) · 4 cases');
+    await expect(window.getByTestId('TEST_ENTRY').locator('> *').first()).toHaveText('all(a, b, c) · 3 cases');
     expect([...(await window.getByTestId('TEST_CASE_ROW').allTextContents())].sort()).toStrictEqual([
       'not run all(false, false, false)',
-      'not run all(false, true, false)',
       'not run all(true, false, false)',
       'not run all(true, true, false)',
     ]);
     expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
-      '  => 2: (not run)',
       '  => 2: (not run)',
       '  => 2: (not run)',
       '  => 2: (not run)',
