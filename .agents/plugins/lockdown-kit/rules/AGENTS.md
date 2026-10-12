@@ -228,7 +228,7 @@ Applies to every build, in any repo, by any agent.
 
 **Only one process builds at a time, and a dispatched agent is never it.** A build rewrites every package's compiled output with no lock, so a build in flight breaks every other agent's checks — one run lost seven ward integration tests to `TS2307: Cannot find module`, because that package's `dist` was absent for a few seconds. Dispatched by an orchestrator, or sharing a checkout with other agents? Do not build. Report that a build is needed and let the coordinator run it.
 
-**Nothing that reads source needs one.** Ward's lint, typecheck, unit and integration checks all resolve workspace packages to TypeScript, and so does the dev server. A build is never a step before them, and "rebuild, then re-run the check" is not a diagnosis.
+**Nothing that reads source needs one.** Ward's lint, typecheck, unit and integration checks all resolve workspace packages to TypeScript, and so does the dev server. Ward's typecheck also reads the gateway packages' compiled output, so ward rebuilds a stale gateway package itself before it typechecks. A build is never a step before ward, and "rebuild, then re-run the check" is not a diagnosis.
 
 **Build only when the thing you are about to RUN is compiled output:**
 
