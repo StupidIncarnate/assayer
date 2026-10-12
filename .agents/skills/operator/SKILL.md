@@ -11,8 +11,8 @@ owning git, and deciding what runs when. You write no code yourself.
 Your goal is to run the plan document given at `$ARGUMENTS` (or the path the user names).
 
 **The shape of a run, in one paragraph.** Each phase gets its own worktree, branched from the phase before it. Workers
-write code and tests and run no checks at all. When a row is coded, one reviewer reads the row's changes against its
-task docs and checks the glue between them; the reviewer runs no checks either. You commit the row once its fixes
+write code and tests and run only lint and unit on their own files. When a row is coded, one reviewer reads the row's
+changes against its task docs and checks the glue between them; the reviewer runs no checks. You commit the row once its fixes
 land. When the whole phase is coded, one agent runs ward over the phase package by package and fixes what fails, while
 you cut the next phase's worktree and start dispatching there. When the phase is clean, you merge it into `main` and
 bring `main` into every open worktree.
@@ -32,11 +32,14 @@ run graded a single state of the tree. Agents left running for 1 to 3 hours did 
   2. Markdown documentation or skill files, when the user explicitly asks.
 - **When the user gives an instruction or asks a question, answer it first** (§2.K). Do not run builds, tests or
   unrelated actions while doing a docs-only request.
+- **You never read source files.** To learn something about the code, send an agent and get a short answer; this
+  keeps package docs and file bodies out of your context.
 
 ### B. Banned (zero tolerance)
 
-- ❌ **A worker or reviewer that runs ward, jest, tsc, eslint, playwright or a build.** Only the phase ward agent
-  (§1.B.4) and you run checks. Every dispatch prompt says so.
+- ❌ **A reviewer that runs any check, or a worker that runs anything past lint and unit on its own files** (ward,
+  jest, tsc, eslint, playwright or a build). Only a worker's own lint and unit, the phase ward agent (§1.B.4) and you
+  run checks. Every dispatch prompt says so.
 - ❌ **An agent past one hour.** At one hour it hands off (§2.E). This includes ward agents and reviewers.
 - ❌ **Per-row planners.** A planner runs once per phase, and only when the plan lacks file lists and specs.
 - ❌ **Running a row's independent tasks one at a time.** Dispatch them together, up to the concurrency cap.
@@ -75,7 +78,10 @@ run graded a single state of the tree. Agents left running for 1 to 3 hours did 
 2. **`batch_worker`** (sonnet for planned work; opus for a task the plan marks hard) — writes code and tests for one
    task of 1 to 3 files (2 to 4 for a migration), named exactly in its prompt.
    - Calls `get-architecture`, `get-testing-patterns`, and `get-folder-detail` for each folder type it writes, first.
-   - **Runs no checks of any kind.** It keeps types consistent by opening every caller and import it changes.
+   - **Runs lint and unit on its own files only**: `npm run ward -- --only lint,unit -- <its files>`. Never typecheck
+     (it spans packages and grades other workers' half-written files), never integration, e2e, `--changed` or a bare
+     ward. Ward skips its typecheck gate when `--only` omits `typecheck`. It keeps types consistent by opening every
+     caller and import it changes.
    - Touches only its files and their companions (`.proxy.ts`, `.stub.ts`, `.test.ts`). Anything else goes in its
      reply.
    - Never edits `packages/@gateway/*` or a shared package every other package imports unless its task names the
@@ -83,9 +89,10 @@ run graded a single state of the tree. Agents left running for 1 to 3 hours did 
    - Never writes source through Bash (heredoc, `cat >`, `sed -i`, `python3`). When the pre-edit hook refuses an edit,
      it reports that instead.
    - Hands off at one hour (§2.E).
-   - Replies in under 12 lines:
+   - Replies in under 12 lines, plus the CHECKLIST:
      ```
      CHANGED — one line per file: path, what changed
+     CHECKLIST — one line per bullet of the task doc's Change and Tests sections: `✓ <gist>` or `✗ <gist> — reason`; a bullet is never skipped silently
      CALLERS — every caller, proxy or test outside its files that the change affects, with path; "None" if none
      LEFT STANDING — anything seen and not fixed, with path and reason; "None" if none
      DECISIONS — any choice its task doc did not make; "None" if none
@@ -105,12 +112,13 @@ run graded a single state of the tree. Agents left running for 1 to 3 hours did 
      the exact change, plus a separate list of **questions** for you.
    - Replies in under 10 lines: the findings file, the count, the two worst defects.
 
-4. **`phase_ward`** (opus) — once per phase, when every row is coded and committed. **The only agent that runs ward.**
+4. **`phase_ward`** (opus) — once per phase, when every row is coded and committed. **The only agent that runs ward past a worker's own lint and unit.**
    - Works in the phase's worktree. Runs `npm run build` there first if any compiled output is stale.
    - Runs ward **package by package in import order**, leaves first: the `@gateway/*` packages and any shared package,
      then each package once everything it imports is green. `npm run ward -- -- packages/<pkg>`.
    - **E2e-eligible packages go last, in two steps each** (`packageType` `frontend-react` or `frontend-ink`):
      `--only lint,typecheck,unit,integration -- packages/<pkg>`, then `--only e2e -- packages/<pkg>` on its own.
+   - Groups failures by error message first; a shared cause is fixed once, centrally, before any per-file fix.
    - Fixes each failure on its own files before moving on. When a fix changes a shared test file (harness, proxy, stub,
      helper), it finds every importing test with `discover` and runs those too.
    - **Flaky rule:** a test that fails but passes when its file runs alone is recorded as flaky, and it moves on.
@@ -144,9 +152,13 @@ run graded a single state of the tree. Agents left running for 1 to 3 hours did 
 
 1. **Before dispatching a row**, read the plan's operator notes for that row and compare each task's files with every
    task in flight in any worktree. Hold a task whose file is in flight.
-2. **Dispatch the row's independent tasks together**, up to the cap; feed the rest in as slots free.
-3. **Every dispatch prompt names**: the worktree path, the standing worker brief, the task doc, "run no ward", and
-   any hazard an earlier task in the row reported (keep a running list in the row's notes file).
+2. **Dispatch the row's independent tasks together**, up to the cap; feed the rest in as slots free. When a task
+   changes something many tests build on (a widely composed proxy, a harness, a stub factory), run ward on a few
+   tests that use it before dispatching more work built on it.
+3. **Every dispatch prompt names**: the worktree path, the standing worker brief, the task doc, "lint and unit on
+   your own files only", and any hazard an earlier task in the row reported (keep a running list in the row's notes
+   file). When one task settles a shape later tasks consume (a route body, a harness API, a set of proxy methods),
+   write a short interface notes file beside the plan and name it in those tasks' prompts.
 4. **Collect every reply into the row's notes file** as it arrives — CALLERS, LEFT STANDING, DECISIONS, Bash-written
    files. The reviewer works from it.
 5. **When every task has replied**, dispatch the row reviewer(s). Decide their questions, record the decisions in
@@ -166,7 +178,8 @@ run graded a single state of the tree. Agents left running for 1 to 3 hours did 
 
 ### D. Checks and merges
 
-1. **Workers and reviewers run nothing.** The phase ward agent runs everything, once per phase (§1.B.4).
+1. **Workers run lint and unit on their own files only; reviewers run nothing.** Typecheck runs when the tree
+   settles: you at a quiet point, and the phase ward agent, which runs everything once per phase (§1.B.4).
 2. **The flaky rule (user's rule):** a test that fails in a wide run but passes when its file runs alone counts as
    passed. Merge, and dispatch one agent to diagnose and fix the flaky test while the phases move on.
 3. **Before merging a phase into `main`:** the phase ward agent reports every package green or flaky-only, and the
@@ -286,7 +299,7 @@ PHASE START
   planner once, only if the plan lacks file lists and specs
 
 FOR EACH ROW
-  dispatch its tasks (code only, no checks, one-hour limit) up to the cap; feed the rest as slots free
+  dispatch its tasks (code, lint and unit on own files only, one-hour limit) up to the cap; feed the rest as slots free
   collect each reply into the row's notes file
   when all have replied: row reviewer(s), read-only → findings files with fix tasks and questions
   decide the questions; merge the fix tasks by file; dispatch them in waves (root causes first)

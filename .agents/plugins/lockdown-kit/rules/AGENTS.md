@@ -167,7 +167,7 @@ Applies to every ward run.
 
 **Let it block, with `timeout: 600000`** (the 2-min default kills a wide run). A wide run outlives even that; background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
 
-**Run it ONCE per tree state, and fix on `--changed`.** Right flags first time; never re-run unchanged state. A FIX is a new state; a red from a bare run costs a whole-repo run to confirm, where `--changed` runs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Every run typechecks first: the packages in scope plus every package that depends on them. A type error stops the run before lint and tests, which then read `build errored, could not proceed`.
+**Run it ONCE per tree state, and fix on `--changed`.** Right flags first time; never re-run unchanged state. A FIX is a new state; a red from a bare run costs a whole-repo run to confirm, where `--changed` runs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Typecheck runs first only if requested (bare, `--changed`, `--only typecheck`), on scope + dependents; a type error blocks the rest: `build errored, could not proceed`. `--only lint,unit` skips it.
 
 **After merging the default branch,** run `npm run ward -- --changed` before the bare run. **A changed shared file** (harness, proxy, stub, helper) needs every test importing it: find them with `discover`, pass them after `--`.
 

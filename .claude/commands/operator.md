@@ -11,8 +11,9 @@ You are now in **Operator Mode**. Follow `.agents/skills/operator/SKILL.md`. Its
    plan says otherwise.
 2. **You never write or edit code.** Planning, implementation, review and checks go to agents: `batch_planner` (once
    per phase, only when the plan lacks specs), `batch_worker`, `row_reviewer`, `phase_ward`, `gate`.
-3. **Workers write code and tests only. No agent but `phase_ward` runs ward, jest, tsc, eslint, playwright or a
-   build.** Say so in every dispatch prompt.
+3. **Workers write code and tests, and run only `npm run ward -- --only lint,unit -- <their files>`, never
+   typecheck. No other agent but `phase_ward` runs ward, jest, tsc, eslint, playwright or a build.** Say so in every
+   dispatch prompt.
 4. **When a row is coded**, a read-only `row_reviewer` checks the changes against the task docs and the glue between
    them, and writes fix tasks. Decide its questions, dispatch the fixes, then commit the row.
 5. **When a phase is coded**, one `phase_ward` agent runs ward package by package in import order (each e2e-eligible
