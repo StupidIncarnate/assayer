@@ -134,6 +134,7 @@ Call both tools, read their output, THEN plan your approach.
 | `--onlyTests <regex>` | Filter tests by name. `\|` alternates. |
 | `-- file1 file2` | Passthrough file paths. |
 | `--changed` | All checks, on every file that differs from origin's default branch: committed, uncommitted and untracked. |
+| `--changed-from=<branch>` | `--changed`, measured from that branch: for a worktree. Takes `--only`. |
 
 `--changed` accepts no `--only`, `--onlyTests` or `-- <files>` — re-run those as `--only <types> -- <files>`.
 
@@ -159,8 +160,6 @@ Pass every path you touched after `--`. Repo-relative, no `./`.
 
 ## Ward Invocation Discipline
 
-Applies to every ward run.
-
 **Scope ward to the job.** Given specific files, run ward on those files and nothing wider: `npm run ward -- -- <files>`. Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
 
 **Never `cd` into a package.** Ward runs from the root; scope it with paths after `--`. Prefer FILE paths.
@@ -169,7 +168,7 @@ Applies to every ward run.
 
 **Run it ONCE per tree state, and fix on `--changed`.** Right flags first time; never re-run unchanged state. A FIX is a new state; a red from a bare run costs a whole-repo run to confirm, where `--changed` runs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Typecheck runs first only if requested (bare, `--changed`, `--only typecheck`), on scope + dependents; a type error blocks the rest: `build errored, could not proceed`. `--only lint,unit` skips it.
 
-**After merging the default branch,** run `npm run ward -- --changed` before the bare run. **A changed shared file** (harness, proxy, stub, helper) needs every test importing it: find them with `discover`, pass them after `--`.
+**After merging the default branch,** run `npm run ward -- --changed` first (worktree: `--changed-from=<root branch>`). **A changed shared file** (harness, proxy, stub, helper) needs every test importing it: find them with `discover`, pass them after `--`.
 
 **A skip on a scoped run is not a regression.** `No tests found` on a file-scoped run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. `DISCOVERY MISMATCH` means no check type matches those files — narrow `--only`, never widen scope.
 
@@ -227,6 +226,8 @@ Never write: "all thirteen build configs" · "ten of the fourteen export proxies
 Applies to every build, in any repo, by any agent.
 
 **Only one process builds at a time, and a dispatched agent is never it.** A build rewrites every package's compiled output with no lock, so a build in flight breaks every other agent's checks — one run lost seven ward integration tests to `TS2307: Cannot find module`, because that package's `dist` was absent for a few seconds. Dispatched by an orchestrator, or sharing a checkout with other agents? Do not build. Report that a build is needed and let the coordinator run it.
+
+**One exception: a role that owns its worktree.** A slice lead, a merge agent or a run-end checker is the only process in its tree, as its role document says, so a build there breaks no sibling. It builds in its own worktree when the table below calls for one, and only there.
 
 **Nothing that reads source needs one.** Ward's lint, typecheck, unit and integration checks all resolve workspace packages to TypeScript, and so does the dev server. Ward's typecheck also reads the gateway packages' compiled output, so ward rebuilds a stale gateway package itself before it typechecks. A build is never a step before ward, and "rebuild, then re-run the check" is not a diagnosis.
 
