@@ -1,39 +1,6 @@
 {
-  "compilerOptions": {
-    "noEmit": true,
-    "target": "ES2022",
-    "module": "node16",
-    "moduleResolution": "node16",
-    "customConditions": [
-      "source"
-    ],
-    "lib": [
-      "ES2022"
-    ],
-    "types": [
-      "node",
-      "jest"
-    ],
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "allowUnreachableCode": false,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "exactOptionalPropertyTypes": true,
-    "noUncheckedIndexedAccess": true,
-    "typeRoots": [
-      "../../node_modules/@types",
-      "../../@types"
-    ]
-  },
-  "include": [
-    "src/**/*"
+  "extends": [
+    "../../tsconfig.json",
+    "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.package"
   ]
 }

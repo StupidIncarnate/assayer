@@ -1,7 +1,6 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "typeRoots": ["../../node_modules/@types", "../../@types"]
-  },
-  "include": ["src/**/*", "test/**/*", "*.ts"]
+  "extends": [
+    "../../tsconfig.json",
+    "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.package"
+  ]
 }

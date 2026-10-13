@@ -4,13 +4,8 @@ const [tsJest, tsJestOptions] = base.transform['^.+\\.tsx?$'];
 
 module.exports = {
   ...base,
-  // `source` first, so a test resolves each workspace package through its `exports` map to TypeScript
-  // source, never to a built dist.
-  testEnvironmentOptions: { customExportConditions: ['source', 'require', 'default'] },
   testMatch: ['**/src/**/*.test.ts', '**/src/**/*.test.tsx', '**/bin/**/*.test.ts'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'json'],
-  moduleNameMapper: {
-  },
   transform: {
     ...base.transform,
     '^.+\\.tsx?$': [

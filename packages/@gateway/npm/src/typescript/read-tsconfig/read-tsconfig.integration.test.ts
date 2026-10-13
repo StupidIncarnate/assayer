@@ -1,15 +1,15 @@
 import { readTsconfig } from './read-tsconfig';
 
-// Real parses over the real disk, with no proxy. The npm gateway's own tsconfig is self-contained and
-// extends nothing. The shared package's tsconfig extends the repo root's tsconfig, which extends
-// tsconfig.base.json: a real three-level `extends` chain.
+// Real parses over the real disk, with no proxy. Every package tsconfig extends the repo root's
+// tsconfig and the published package base, and the repo root extends the published root base: a real
+// multi-level `extends` chain.
 const PACKAGE_ROOT = __dirname.replace(/\/src\/typescript\/read-tsconfig$/u, '');
 const REPO_ROOT = PACKAGE_ROOT.replace(/\/packages\/@gateway\/npm$/u, '');
 const THIS_WRAPPER = `${__dirname}/read-tsconfig.ts`;
 const A_CORE_FILE = `${REPO_ROOT}/packages/core/src/transformers/walk-file/walk-file-transformer.ts`;
 
 describe('readTsconfig against the real disk', () => {
-  it('VALID: {the npm gateway tsconfig} => its file list holds this wrapper, and its options come from its own file', () => {
+  it('VALID: {the npm gateway tsconfig} => its file list holds this wrapper, and its options come from the repo root and the package base', () => {
     const result = readTsconfig({ configFilePath: `${PACKAGE_ROOT}/tsconfig.json` });
 
     expect({
@@ -21,8 +21,8 @@ describe('readTsconfig against the real disk', () => {
     }).toStrictEqual({
       ownsThisWrapper: [THIS_WRAPPER],
       references: [],
-      typeRoots: [`${REPO_ROOT}/node_modules/@types`, `${REPO_ROOT}/@types`, `${PACKAGE_ROOT}/@types`],
-      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+      typeRoots: [`${REPO_ROOT}/node_modules/@types`],
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
       strict: true,
     });
   });
@@ -32,15 +32,15 @@ describe('readTsconfig against the real disk', () => {
 
     expect({
       references: result?.references,
-      // From the shared package's own config.
+      // From the repo root's config.
       typeRoots: result?.options.typeRoots,
-      // From the repo root's config, which replaces the base's `lib`.
+      // From the repo root's config, which replaces the published base's `lib`.
       lib: result?.options.lib,
-      // From tsconfig.base.json, two levels up the chain.
+      // From the published root base, two levels up the chain.
       strict: result?.options.strict,
     }).toStrictEqual({
       references: [],
-      typeRoots: [`${REPO_ROOT}/node_modules/@types`, `${REPO_ROOT}/@types`],
+      typeRoots: [`${REPO_ROOT}/node_modules/@types`],
       lib: ['lib.es2022.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
       strict: true,
     });

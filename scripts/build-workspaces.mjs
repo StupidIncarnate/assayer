@@ -24,6 +24,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, rmdirSync, unlinkSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { listWorkspacePackageDirs } from './workspace-package-dirs.mjs';
 
 const REPO_ROOT = fileURLToPath(new URL('..', import.meta.url));
@@ -104,27 +105,38 @@ const readPruneConfig = ({ packageDir }) => {
     return { kind: 'skip', reason: 'no tsc outDir to prune' };
   }
 
-  let config;
+  // TypeScript's own reader, so `extends` and `${configDir}` resolve the way `tsc -p` resolves them: the
+  // package file is thin and the published base carries rootDir and outDir.
+  const { config: rawConfig, error } = ts.readConfigFile(configPath, ts.sys.readFile);
 
-  try {
-    config = JSON.parse(readFileSync(configPath, 'utf8'));
-  } catch (error) {
+  if (error !== undefined) {
     return {
       kind: 'invalid',
       configPath,
-      message: `cannot be read as JSON: ${error.message}`,
-      hint: 'tsc accepts JSONC, but this prune parses strict JSON. Remove every comment and trailing comma.',
+      message: `cannot be read: ${ts.flattenDiagnosticMessageText(error.messageText, '\n')}`,
+      hint: 'Fix the config so `tsc -p` can read it.',
     };
   }
 
-  const { rootDir, outDir } = config.compilerOptions ?? {};
+  const { options, errors } = ts.parseJsonConfigFileContent(rawConfig, ts.sys, packageDir, undefined, configPath);
+  const { rootDir, outDir } = options;
+  const extendsError = errors.find((diagnostic) => diagnostic.code === 6053);
+
+  if (extendsError !== undefined) {
+    return {
+      kind: 'invalid',
+      configPath,
+      message: `cannot resolve its extends chain: ${ts.flattenDiagnosticMessageText(extendsError.messageText, '\n')}`,
+      hint: 'Install the package the config extends.',
+    };
+  }
 
   if (typeof rootDir !== 'string' || typeof outDir !== 'string') {
     return {
       kind: 'invalid',
       configPath,
-      message: `compilerOptions.rootDir and compilerOptions.outDir must both be strings (rootDir: ${JSON.stringify(rootDir)}, outDir: ${JSON.stringify(outDir)})`,
-      hint: 'This prune does not follow `extends`, and a guessed default would map the emit at the wrong depth. Set both in this file.',
+      message: `compilerOptions.rootDir and compilerOptions.outDir must both resolve to strings (rootDir: ${JSON.stringify(rootDir)}, outDir: ${JSON.stringify(outDir)})`,
+      hint: 'Set both in this file or in a base it extends; a guessed default would map the emit at the wrong depth.',
     };
   }
 

@@ -1,4 +1,5 @@
 {
+  "extends": "@legendscribe/lockdown-kit-eslint-plugin/tsconfig",
   "compilerOptions": {
     "noEmit": true,
     "jsx": "react-jsx",
@@ -8,18 +9,17 @@
       "DOM.Iterable"
     ],
     "allowJs": true,
-    "types": ["*"],
+    "sourceMap": true,
+    "types": [
+      "*"
+    ],
     "typeRoots": [
       "./node_modules/@types"
-    ],
-    "module": "node16",
-    "moduleResolution": "node16",
-    "customConditions": ["source"]
+    ]
   },
   "include": [
     "packages/*/src/**/*.ts",
     "packages/*/src/**/*.tsx",
     "packages/*/*.ts"
-  ],
-  "extends": "./tsconfig.base.json"
+  ]
 }
