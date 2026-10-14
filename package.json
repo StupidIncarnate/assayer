@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Test enforcement + generation for TypeScript repos, maintained by LLMs.",
   "private": true,
+  "engines": {
+    "node": ">=22.12"
+  },
   "workspaces": [
     "packages/*",
     "packages/@gateway/*"

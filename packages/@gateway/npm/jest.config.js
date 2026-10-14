@@ -1,18 +1,9 @@
-// A copied wrapper's test can switch itself to jsdom with an `@jest-environment jsdom` docblock
-// (react-dom__client's root stub test does); the polyfill supplies the globals jsdom lacks. A
-// node-environment test already has them, and the polyfill's own guards make it a no-op there.
-const base = require('@legendscribe/lockdown-kit-testing/jest-config-base');
+const baseConfig = require('../../../jest.config.base.js');
 
 module.exports = {
-  ...base,
-  // jsdom resolves packages with the `browser` condition unless told otherwise. The base loads MSW's
-  // Node server in `setupFilesAfterEnv`, and under `browser` it pulls @mswjs/interceptors' ES-module
-  // browser build, which Jest cannot load. `gateway-source` points another gateway package at its
-  // TypeScript source, and only the gateway packages' `exports` carry it. `source` stays out: it
-  // would point @legendscribe/lockdown-kit-testing's own entry at its `src/` while the base's setup file loads
-  // `dist/`, so a test would stage responses on a second MSW server that never answers.
-  testEnvironmentOptions: {
-    customExportConditions: ['gateway-source', 'node', 'require', 'default'],
-  },
-  setupFiles: [...(base.setupFiles ?? []), '@legendscribe/lockdown-kit-testing/jsdom-polyfills'],
+  ...baseConfig,
+  roots: ['<rootDir>/src'],
+  // A copied wrapper's test can switch itself to jsdom with an `@jest-environment jsdom` docblock;
+  // the polyfills supply the globals jsdom lacks. A node-environment test already has them.
+  setupFiles: [...baseConfig.setupFiles, '@legendscribe/lockdown-kit-testing/jsdom-polyfills'],
 };

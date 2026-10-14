@@ -1,11 +1,6 @@
-const base = require('@legendscribe/lockdown-kit-testing/jest-config-base');
+const baseConfig = require('../../../jest.config.base.js');
 
 module.exports = {
-  ...base,
-  // `gateway-source` points another gateway package at its TypeScript source, which ts-jest
-  // transforms, so a test here never reads that gateway's last build. Only the gateway packages'
-  // `exports` carry it. `source` stays out: it would point @legendscribe/lockdown-kit-testing's own entry at its
-  // `src/` while the base's setup file loads `dist/`, so a test would stage responses on a second
-  // MSW server that never answers. `node` and `node-addons` are the Node environment's defaults.
-  testEnvironmentOptions: { customExportConditions: ['gateway-source', 'node', 'node-addons'] },
+  ...baseConfig,
+  roots: ['<rootDir>/src'],
 };

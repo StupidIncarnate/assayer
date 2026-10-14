@@ -2,6 +2,8 @@
   "extends": ["../../tsconfig.json", "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.package"],
   "compilerOptions": {
     "module": "esnext",
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   }
 }
