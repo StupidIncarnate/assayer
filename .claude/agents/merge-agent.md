@@ -42,13 +42,11 @@ path, the review file's path and the run folder's path.
 
    | Check | Command |
    |---|---|
-   | The whole slice, after the merge and after your last fix | `npm run ward -- --changed-from=<root branch> --only lint,typecheck,unit,integration` |
-   | While you fix something, on just the files you touched | `npm run ward -- --only lint,typecheck,unit,integration -- <those files>` |
-   | Only if the slice document marks this as the e2e slice | `npm run ward -- --changed-from=<root branch> --only e2e` |
+   | Before the merge into the root branch, after the root branch is merged in and after your last fix | `npm run ward` |
+   | While you fix something, on just the files you touched | `npm run ward -- --files=<those files>` |
    | Each extra verify command the slice document lists | exactly as the slice document writes it |
 
-   Because you just merged the root branch in, `--changed-from` grades exactly the slice's own changes on top of the
-   latest root.
+   The bare ward grades the slice on top of the latest root branch, which is what the merge will produce.
    - Fix what the merge broke (see "What you may fix"). Check the files you touched, rebuild any package whose
      compiled output a check runs, commit the fix on the slice branch, and run the whole-slice check again.
    - The flaky rule: a test that fails in this run but passes when its file runs alone is flaky. Note it and move on.
@@ -82,7 +80,7 @@ These are the only commands you run, apart from reading files and `discover`: gi
 into the root branch, the builds in step 4, the checks in step 5, siegelense, and `npm run dev` or e2e for a manual
 step that needs them.
 
-- Never run `--changed` or a bare `npm run ward`.
+- Never run `--changed` or `--changed-from`. The bare `npm run ward` in step 5 is the one whole-repo run.
 - Never run jest, tsc, eslint or playwright directly.
 - **Builds.** The build-discipline snippet in your context says a dispatched agent never builds, because builds
   collide in a shared tree. The slice worktree is not shared while you work: you are the only process in it. So you

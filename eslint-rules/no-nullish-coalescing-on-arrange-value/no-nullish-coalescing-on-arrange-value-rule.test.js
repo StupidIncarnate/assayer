@@ -5,7 +5,7 @@
  *   against real syntax, so a hand-built fake AST node would prove nothing about whether the rule fires
  *   on real code — this uses `RuleTester`, which parses each `code` string for real, type-checks it
  *   against a real tsconfig (`./fixtures/tsconfig.json`), and runs the rule against the actual
- *   type-checked AST, exactly as `npm run ward -- --only lint` does.
+ *   type-checked AST, exactly as `npm run ward -- --files=<file>` does.
  *
  *   Every fixture imports the REAL `RepresentativeValue` and `ArrangeValue` types from
  *   packages/shared/src/contracts, not a hand-rolled stand-in. The rule matches on the checker's model

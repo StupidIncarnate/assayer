@@ -21,36 +21,36 @@
  * `config-lockdown-kit-broker.ts`) only for `**\/src/*.integration.test.ts`.
  *
  * USAGE:
- * npm run ward -- --only integration -- packages/@gateway/node/src/gateway-node-builtin-globals.integration.test.ts
+ * npm run ward -- --files=packages/@gateway/node/src/gateway-node-builtin-globals.integration.test.ts
  */
-import { readdirSync } from 'fs';
+import { readdirSync } from "fs";
 
-import { builtinModules } from './module/module';
+import { builtinModules } from "./module/module";
 
 const SRC_DIR = __dirname;
-const SUBPATH_JOIN = '__';
-const RESERVED_TEST_SUPPORT_FOLDER = 'gateway-test-support';
+const SUBPATH_JOIN = "__";
+const RESERVED_TEST_SUPPORT_FOLDER = "gateway-test-support";
 
 // Node globals this gateway wraps that are NOT also built-in module names. Node's built-in modules
 // (fs, path, process, …) already come from `builtinModules`; this list is only the extra surface
 // `globalThis` carries on top of that — add a name here when a new folder wraps one.
 const nodeGlobalNamesForTest = [
-  'AbortController',
-  'Date',
-  'Request',
-  'Response',
-  'atob',
-  'btoa',
-  'clearImmediate',
-  'clearInterval',
-  'clearTimeout',
-  'fetch',
-  'performance',
-  'queueMicrotask',
-  'setImmediate',
-  'setInterval',
-  'setTimeout',
-  'structuredClone',
+  "AbortController",
+  "Date",
+  "Request",
+  "Response",
+  "atob",
+  "btoa",
+  "clearImmediate",
+  "clearInterval",
+  "clearTimeout",
+  "fetch",
+  "performance",
+  "queueMicrotask",
+  "setImmediate",
+  "setInterval",
+  "setTimeout",
+  "structuredClone",
 ];
 
 const readOwnSrcFolders = (): string[] =>
@@ -58,10 +58,15 @@ const readOwnSrcFolders = (): string[] =>
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
-const folderNamesABuiltinModule = ({ folderName }: { folderName: string }): boolean =>
+const folderNamesABuiltinModule = ({
+  folderName,
+}: {
+  folderName: string;
+}): boolean =>
   builtinModules.some(
     (moduleName) =>
-      folderName === moduleName || folderName.startsWith(`${moduleName}${SUBPATH_JOIN}`),
+      folderName === moduleName ||
+      folderName.startsWith(`${moduleName}${SUBPATH_JOIN}`),
   );
 
 const folderNamesAGlobal = ({ folderName }: { folderName: string }): boolean =>
@@ -79,8 +84,8 @@ const folderNamesNeitherBuiltinNorGlobalNorReserved = ({
   !folderNamesAGlobal({ folderName }) &&
   folderName !== RESERVED_TEST_SUPPORT_FOLDER;
 
-describe('gateway node builtin and global folder names', () => {
-  it('VALID: {every src/ folder} => names a real Node builtin module, a real Node global, or is the one reserved test-support folder', () => {
+describe("gateway node builtin and global folder names", () => {
+  it("VALID: {every src/ folder} => names a real Node builtin module, a real Node global, or is the one reserved test-support folder", () => {
     const foldersNamingNeither = readOwnSrcFolders().filter((folderName) =>
       folderNamesNeitherBuiltinNorGlobalNorReserved({ folderName }),
     );

@@ -1280,11 +1280,12 @@ nobody declared, fails there, which is exactly what a forgotten trait
 looks like.
 
 That cross-check test is NOT part of `test:syntax`. It is a core
-integration test, so it runs under `npm run ward`, while `test:syntax`
+integration test, so it runs under ward's integration check, while `test:syntax`
 runs only the colocated specimen tests themselves. A declaration missing a
 trait the file plainly has will pass `test:syntax` and every scoped unit
 run, and will fail only inside ward's integration graph. After adding or
-editing a specimen, run BOTH `npm run test:syntax` and `npm run ward`.
+editing a specimen, run `npm run test:syntax` and
+`npm run ward -- --packages=core`.
 
 ### Step 2: write the handler
 
@@ -1329,13 +1330,16 @@ npx tsx /tmp/.../probe.ts
 # Import ts-morph the same way too, from '/abs/.../node_modules/ts-morph'.
 ```
 
-Then run BOTH of these commands. `test:syntax` is NOT part of ward's Jest
+Then run `test:syntax` and a scoped ward. `test:syntax` is NOT part of ward's Jest
 graph, so running ward alone does not cover it:
 
 ```bash
 npm run test:syntax        # the specimen catalogue
-npm run ward                # lint, typecheck, unit, integration, and e2e, across all 5 packages
+npm run ward -- --files=<the files you edited>   # lint, unit, integration, e2e specs named
+npm run ward -- --packages=core                  # all five checks; use when you own the whole package
 ```
+
+A bare `npm run ward` runs only before a merge into `main`.
 
 Two properties must hold, and a probe script is a cheap way to check both:
 

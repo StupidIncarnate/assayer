@@ -29,7 +29,7 @@ path.
    and the browser console after every step that drives a screen. A screen that breaks fails the step even when the
    API answer is right.
 7. **Fix what fails,** under "What you may fix". Commit each fix on the root branch with
-   `fix(<run name>): run-end: <what>`. Re-check with `npm run ward -- -- <the files the fix touched>`, then make one
+   `fix(<run name>): run-end: <what>`. Re-check with `npm run ward -- --files=<the files the fix touched>`, then make one
    more bare run at the end.
 8. **Write `gate.md`'s "Report" section:** any deviations from the gate's steps, and one row per step with its result
    and evidence.

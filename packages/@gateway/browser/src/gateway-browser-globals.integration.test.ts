@@ -19,53 +19,53 @@
  * `config-lockdown-kit-broker.ts`) only for `**\/src/*.integration.test.ts`.
  *
  * USAGE:
- * npm run ward -- --only integration -- packages/@gateway/browser/src/gateway-browser-globals.integration.test.ts
+ * npm run ward -- --files=packages/@gateway/browser/src/gateway-browser-globals.integration.test.ts
  */
-import { readdirSync } from 'fs';
+import { readdirSync } from "fs";
 
 const SRC_DIR = __dirname;
-const RESERVED_TEST_SUPPORT_FOLDER = 'gateway-test-support';
+const RESERVED_TEST_SUPPORT_FOLDER = "gateway-test-support";
 
 // Real browser globals this gateway wraps. No shared statics list of "every browser global" exists
 // anywhere else in this repo — add a name here when a new folder wraps one.
 const browserGlobalNamesForTest = [
-  'AbortController',
-  'atob',
-  'Blob',
-  'btoa',
-  'clearInterval',
-  'clearTimeout',
-  'console',
-  'createImageBitmap',
-  'crypto',
-  'Date',
-  'document',
-  'Element',
-  'Error',
-  'Event',
-  'fetch',
-  'File',
-  'FileReader',
-  'HTMLCanvasElement',
-  'HTMLElement',
-  'HTMLImageElement',
-  'indexedDB',
-  'InputEvent',
-  'localStorage',
-  'location',
-  'navigator',
-  'Node',
-  'requestAnimationFrame',
-  'ResizeObserver',
-  'sessionStorage',
-  'setInterval',
-  'setTimeout',
-  'Text',
-  'URL',
-  'URLSearchParams',
-  'WebSocket',
-  'window',
-  'XMLHttpRequest',
+  "AbortController",
+  "atob",
+  "Blob",
+  "btoa",
+  "clearInterval",
+  "clearTimeout",
+  "console",
+  "createImageBitmap",
+  "crypto",
+  "Date",
+  "document",
+  "Element",
+  "Error",
+  "Event",
+  "fetch",
+  "File",
+  "FileReader",
+  "HTMLCanvasElement",
+  "HTMLElement",
+  "HTMLImageElement",
+  "indexedDB",
+  "InputEvent",
+  "localStorage",
+  "location",
+  "navigator",
+  "Node",
+  "requestAnimationFrame",
+  "ResizeObserver",
+  "sessionStorage",
+  "setInterval",
+  "setTimeout",
+  "Text",
+  "URL",
+  "URLSearchParams",
+  "WebSocket",
+  "window",
+  "XMLHttpRequest",
 ];
 
 const readOwnSrcFolders = (): string[] =>
@@ -73,17 +73,26 @@ const readOwnSrcFolders = (): string[] =>
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);
 
-const folderNamesABrowserGlobal = ({ folderName }: { folderName: string }): boolean =>
+const folderNamesABrowserGlobal = ({
+  folderName,
+}: {
+  folderName: string;
+}): boolean =>
   browserGlobalNamesForTest.some((globalName) => folderName === globalName);
 
 // A single named predicate, not an inline `||`, so the conditional lives in a top-level function
 // instead of inside the `it()` body — `jest/no-conditional-in-test` flags a logical expression
 // written directly in a test.
-const folderNamesNeitherGlobalNorReserved = ({ folderName }: { folderName: string }): boolean =>
-  !folderNamesABrowserGlobal({ folderName }) && folderName !== RESERVED_TEST_SUPPORT_FOLDER;
+const folderNamesNeitherGlobalNorReserved = ({
+  folderName,
+}: {
+  folderName: string;
+}): boolean =>
+  !folderNamesABrowserGlobal({ folderName }) &&
+  folderName !== RESERVED_TEST_SUPPORT_FOLDER;
 
-describe('gateway browser global folder names', () => {
-  it('VALID: {every src/ folder} => names a real, maintained browser global, or is the one reserved test-support folder', () => {
+describe("gateway browser global folder names", () => {
+  it("VALID: {every src/ folder} => names a real, maintained browser global, or is the one reserved test-support folder", () => {
     const foldersNamingNeither = readOwnSrcFolders().filter((folderName) =>
       folderNamesNeitherGlobalNorReserved({ folderName }),
     );

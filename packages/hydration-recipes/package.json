@@ -33,9 +33,6 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
-    "test": "lockdown-kit-ward --only test",
-    "typecheck": "lockdown-kit-ward --only typecheck",
-    "lint": "lockdown-kit-ward --only lint",
     "ward": "lockdown-kit-ward"
   },
   "devDependencies": {

@@ -113,7 +113,7 @@ Call both tools, read their output, THEN plan your approach.
 
 ## Ward Quality Commands
 
-**Every check runs through `npm run ward`** — never `npx jest`/`eslint`/`tsc`/`playwright` or `npm test`. Scope it to your files; see ward-discipline before a bare run.
+**Every check runs through `npm run ward`** — never `npx jest`/`eslint`/`tsc`/`playwright` or `npm test`. Pick the scope below; see ward-discipline before a bare run.
 
 ### Check Types
 
@@ -124,35 +124,24 @@ Call both tools, read their output, THEN plan your approach.
 | `unit` | Jest | `*.test.ts`, excludes `*.integration.test.ts` |
 | `integration` | Jest | `*.integration.test.ts` only |
 | `e2e` | Playwright | Browser tests |
-| `test` | *(alias)* | Expands to `unit,integration,e2e` |
 
-### Flags
+### Scopes
 
-| Flag | Description |
-|------|-------------|
-| `--only lint,typecheck,unit` | Comma-separated check types. Omit for all. |
-| `--onlyTests <regex>` | Filter tests by name. `\|` alternates. |
-| `-- file1 file2` | Files only = QUICK check: lint, unit, integration, no wait; typecheck/e2e need `--only`. |
-| `--changed` | All checks, on every file that differs from origin's default branch: committed, uncommitted and untracked. |
-| `--changed-from=<branch>` | `--changed`, measured from that branch: for a worktree. Takes `--only`. |
+One scope per run. Each decides its own checks; no flag picks check types or filters tests.
 
-`--changed` accepts no `--only`, `--onlyTests` or `-- <files>` — re-run those as `--only <types> -- <files>`.
+| Command | Runs |
+|---------|------|
+| `npm run ward` | all five, whole repo |
+| `npm run ward -- --files=a.ts,b.ts` | lint, unit, integration, e2e specs named. No typecheck, no wait |
+| `npm run ward -- --packages=hooks,shared` | all five; typecheck covers their dependents. No wait |
+| `npm run ward -- --changed` | all five, files that differ from the default branch |
+| `npm run ward -- --changed-from=<branch>` | `--changed`, from that branch: a worktree |
+
+`--files=` takes comma-separated repo-relative FILE paths, never a directory. `--packages=` takes folder names (`hooks`, `@gateway/node`) or full package names.
 
 **A 0-file git scope runs NOTHING**: ward says so and exits 0 — empty, not green.
 
-### Common Invocations
-
-```bash
-npm run ward                                  # All checks
-npm run ward -- -- pkg/a.ts pkg/a.test.ts     # THESE FILES — ward picks the checks
-npm run ward -- --only unit -- pkg/a.test.ts  # One check type
-npm run ward -- -- packages/hooks             # One package
-npm run ward -- --changed                     # Every file this branch changed
-```
-
-Pass every path you touched after `--`. Repo-relative, no `./`.
-
-**Failures:** a FILE-scoped run shows diffs inline. Else: `npm run ward -- detail <runId>`.
+**Failures:** a `--files=` run shows diffs inline. Else: `npm run ward -- detail <runId>`.
 
 **Zero tolerance:** Never assume a failure is pre-existing — investigate and fix every one. Whether a FULL run is yours to make green depends on your role; see ward-discipline.
 
@@ -160,17 +149,24 @@ Pass every path you touched after `--`. Repo-relative, no `./`.
 
 ## Ward Invocation Discipline
 
-**Scope ward to the job.** Given specific files, run ward on those files and nothing wider: `npm run ward -- -- <files>`. That is the QUICK check: lint, unit, integration, started at once; typecheck needs `--only typecheck` or a wider run. Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
+**Scope ward to the job.**
 
-**Never `cd` into a package.** Ward runs from the root. Prefer FILE paths.
+| Situation | Command |
+|---|---|
+| Just edited files | `npm run ward -- --files=<those files>` |
+| In charge of a whole package's work, or need typecheck | `npm run ward -- --packages=<package>` |
+
+Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
+
+**Never `cd` into a package.** Ward runs from the root.
 
 **Let it block, with `timeout: 600000`.** A wide run outlives even that; background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
 
-**Run it ONCE per tree state, and fix on `--changed`.** Never re-run unchanged state. A bare run's red costs a whole-repo run to confirm, `--changed` only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Typecheck runs first only if requested (bare, `--changed`, `--only typecheck`), on scope + dependents; a type error blocks the rest: `build errored, could not proceed`. `--only lint,unit` skips it.
+**Run it ONCE per tree state.** Never re-run unchanged state. A bare run's red costs a whole-repo run to confirm; `--files=` or `--packages=` costs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. A type error in the typecheck gate blocks the rest: `build errored, could not proceed`.
 
-**After merging the default branch,** run `npm run ward -- --changed` first (worktree: `--changed-from=<root branch>`). **A changed shared file** (harness, proxy, stub, helper) needs every test importing it: find them with `discover`, pass them after `--`.
+**A change to a shared file** (harness, proxy, stub, helper) needs `--packages=` on every package that uses it: find them with `discover`.
 
-**A skip on a scoped run is not a regression.** `No tests found` on a file-scoped run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. `DISCOVERY MISMATCH` means no check type matches those files — narrow `--only`, never widen scope.
+**A skip on a scoped run is not a regression.** `No tests found` on a `--files=` run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. A `DISCOVERY MISMATCH` is a real finding: investigate why ward found no check for those files.
 
 **Who owns a FULL run.** An agent working directly for the user makes a full `npm run ward` exit 0 and owns every failure in it, including ones it did not cause. An orchestrator-dispatched role never runs the full sweep; its Operating Rules name its rung, and the family's own `ward` step is the regression pass.
 
@@ -235,7 +231,7 @@ Applies to every build, in any repo, by any agent.
 
 | About to run | Build |
 |---|---|
-| the production server, or `brutalpit start` | the whole repo |
+| the production server, or the app's start command | the whole repo |
 | `lockdown-kit init` | the whole repo |
 | an MCP tool, having edited the MCP package | that package, then reconnect the MCP |
 | a hook, having edited the hooks package | that package |

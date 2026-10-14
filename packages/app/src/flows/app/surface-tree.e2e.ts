@@ -12,53 +12,72 @@
  *   catalogue.
  *
  * USAGE:
- * npm run ward -- --only e2e -- packages/app/src/flows/app/surface-tree.e2e.ts
+ * npm run ward -- --files=packages/app/src/flows/app/surface-tree.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect } from '../../../test/harnesses/e2e-fixtures';
-import { syntaxSurfaceHarness } from '../../../test/harnesses/syntax-surface.harness';
+import { test, expect } from "../../../test/harnesses/e2e-fixtures";
+import { syntaxSurfaceHarness } from "../../../test/harnesses/syntax-surface.harness";
 
-const IF_ELSE_IN_FUNCTION = 'packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts';
+const IF_ELSE_IN_FUNCTION =
+  "packages/syntax-repository/src/happy-path/if-else/in-function/in-function.ts";
 
-test.describe('Compiled Surface Explorer — shell + file tree', () => {
+test.describe("Compiled Surface Explorer — shell + file tree", () => {
   const surface = syntaxSurfaceHarness();
 
-  test('VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking happy-path/if-else/in-function/in-function.ts renders its cached source in CodeMirror', async ({ smokeWindow: window }) => {
+  test("VALID: {compiled syntax-repository cache, window opens at /} => header handshake + file tree, and clicking happy-path/if-else/in-function/in-function.ts renders its cached source in CodeMirror", async ({
+    smokeWindow: window,
+  }) => {
     // obs-status-header (also proves obs-tree-bridge-call: header renders live cache data, so the
     // preload->IPC getCompiledTree() handshake resolved). Counts are the compiled surface, derived off
     // disk by the same inclusion rule the compiler uses (specimen .ts files; co-located *.test.ts
     // excluded). Branch segment is the current working-tree namespace (environment-dependent), so the
     // pattern pins the stable brand/root/repo prefix + exact counts and allows any non-space branch token.
-    const header = window.getByTestId('EXPLORER_HEADER');
+    const header = window.getByTestId("EXPLORER_HEADER");
     await expect(header).toBeVisible({ timeout: 30_000 });
     await expect(header).toHaveText(surface.surfaceHeaderPattern());
 
     // obs-tree-render: the left tree is rebuilt purely from the cache manifest relPaths. Assert the
     // exact file leaves and the exact directory nodes derived from those relPaths — both walked off
     // disk, so this is the sole enumeration of the whole catalogue.
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible();
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible();
     // A file with admissions carries a trailing `! <count>` badge inside its leaf, so the leaf text is the
     // name plus that badge. The names are asserted with the badge removed, and the badges on their own below.
-    const fileNames = await window.getByTestId('FILE_TREE_FILE').allTextContents();
-    expect([...fileNames.map((name) => name.replace(/! \d+$/u, ''))].sort()).toStrictEqual(surface.fileLeaves());
+    const fileNames = await window
+      .getByTestId("FILE_TREE_FILE")
+      .allTextContents();
+    expect(
+      [...fileNames.map((name) => name.replace(/! \d+$/u, ""))].sort(),
+    ).toStrictEqual(surface.fileLeaves());
 
     // The error badge marks a file whose analysis admits something Assayer cannot test. A happy-path
     // specimen runs clean by definition, so every badged leaf must live under sad-path.
     const badgedPaths = await window
-      .locator('[data-testid="FILE_TREE_FILE"]:has([data-testid="FILE_TREE_FILE_ERROR_COUNT"])')
-      .evaluateAll((leaves) => leaves.map((leaf) => leaf.getAttribute('data-relpath') ?? ''));
+      .locator(
+        '[data-testid="FILE_TREE_FILE"]:has([data-testid="FILE_TREE_FILE_ERROR_COUNT"])',
+      )
+      .evaluateAll((leaves) =>
+        leaves.map((leaf) => leaf.getAttribute("data-relpath") ?? ""),
+      );
     expect(badgedPaths.length > 0).toBe(true);
-    expect(badgedPaths.filter((relPath) => !relPath.includes('/src/sad-path/'))).toStrictEqual([]);
-    const dirNames = await window.getByTestId('FILE_TREE_DIR').allTextContents();
+    expect(
+      badgedPaths.filter((relPath) => !relPath.includes("/src/sad-path/")),
+    ).toStrictEqual([]);
+    const dirNames = await window
+      .getByTestId("FILE_TREE_DIR")
+      .allTextContents();
     expect([...dirNames].sort()).toStrictEqual(surface.dirNames());
 
     // click-file -> request-file (obs-file-bridge-call): clicking the file (by its exact relPath, so
     // the two in-function.ts rungs never collide) calls getCompiledFile({ relPath }); the resulting
     // render proves the file bridge call resolved.
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_FUNCTION}"]`).click();
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${IF_ELSE_IN_FUNCTION}"]`,
+      )
+      .click();
 
     // code-shown: read-only CodeMirror 6 renders the cached blob — the click reached the code view.
-    const codePanel = window.getByTestId('EXPLORER_CODE');
-    await expect(codePanel.locator('.cm-editor')).toBeVisible();
+    const codePanel = window.getByTestId("EXPLORER_CODE");
+    await expect(codePanel.locator(".cm-editor")).toBeVisible();
   });
 });

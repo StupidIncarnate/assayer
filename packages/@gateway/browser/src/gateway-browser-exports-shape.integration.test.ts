@@ -17,41 +17,41 @@
  * `config-lockdown-kit-broker.ts`) only for `**\/src/*.integration.test.ts`.
  *
  * USAGE:
- * npm run ward -- --only integration -- packages/@gateway/browser/src/gateway-browser-exports-shape.integration.test.ts
+ * npm run ward -- --files=packages/@gateway/browser/src/gateway-browser-exports-shape.integration.test.ts
  */
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readFileSync } from "fs";
+import { join } from "path";
 
-const PACKAGE_ROOT = join(__dirname, '..');
+const PACKAGE_ROOT = join(__dirname, "..");
 
 // Every standard subpath key mapped to the `source` condition's target glob. No `./_test_/*` key —
 // concession 1 (EPIC.md) says the barrel it points at is gone from the end state.
 const STANDARD_SOURCE_TARGETS = {
-  './*.proxy': './src/*.proxy.ts',
-  './*.stub': './src/*.stub.ts',
-  './*': './src/*/*.ts',
+  "./*.proxy": "./src/*.proxy.ts",
+  "./*.stub": "./src/*.stub.ts",
+  "./*": "./src/*/*.ts",
 };
 
 const readOwnExports = (): Record<string, unknown> => {
   const rawPackageJson = JSON.parse(
-    readFileSync(join(PACKAGE_ROOT, 'package.json'), 'utf8'),
+    readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8"),
   ) as Record<string, unknown>;
   return rawPackageJson.exports as Record<string, unknown>;
 };
 
-describe('gateway browser package exports shape', () => {
+describe("gateway browser package exports shape", () => {
   it('VALID: {this package.json exports} => holds exactly "./package.json" and the standard subpath keys, no root "." entry', () => {
     const exportsShape = readOwnExports();
 
     expect(Object.keys(exportsShape).sort()).toStrictEqual(
-      ['./package.json', ...Object.keys(STANDARD_SOURCE_TARGETS)].sort(),
+      ["./package.json", ...Object.keys(STANDARD_SOURCE_TARGETS)].sort(),
     );
   });
 
   it('VALID: {"./package.json" key} => points at the package manifest itself', () => {
     const exportsShape = readOwnExports();
 
-    expect(exportsShape['./package.json']).toBe('./package.json');
+    expect(exportsShape["./package.json"]).toBe("./package.json");
   });
 
   it('VALID: {each subpath key} => its "source" condition targets the standard glob', () => {
@@ -59,7 +59,7 @@ describe('gateway browser package exports shape', () => {
 
     const sourceTargets = Object.fromEntries(
       Object.entries(exportsShape)
-        .filter(([exportKey]) => exportKey !== './package.json')
+        .filter(([exportKey]) => exportKey !== "./package.json")
         .map(([exportKey, exportValue]) => [
           exportKey,
           (exportValue as Record<string, unknown>).source,

@@ -82,22 +82,20 @@ These are the only commands you run, apart from reading files, git on your slice
 
 | When | Command |
 |---|---|
-| After a group of files you have just written | `npm run ward -- --only lint,typecheck,unit,integration -- <those files>` |
-| For the whole slice, before you commit | `npm run ward -- --changed-from=<root branch> --only lint,typecheck,unit,integration` |
-| Only if this is the e2e slice (its worktree name ends in `-e2e`) | `npm run ward -- --changed-from=<root branch> --only e2e` |
+| After a group of files you have just written | `npm run ward -- --files=<those files>` |
+| For the whole slice, before you commit | `npm run ward -- --packages=<each package the slice changes>` |
 | Each extra verify command the slice document lists | exactly as the slice document writes it |
 | A manual verification step that needs the app running | a siegelense instance (`lockdown-kit siegelense docs --for seeding`) |
 | A quick look at a real value before you write a test's expected value | an `npx tsx` script in your scratch folder, outside the repo |
 
-- **What `--changed-from` checks.** It checks every file your branch changed since it left the root branch. That
-  covers committed, uncommitted and untracked files, and leaves out deleted paths.
-- **What ward adds on its own.** Ward pulls in the tests related to your files, and typechecks each touched package
-  whole.
+- **What `--files=` checks.** Lint, unit and integration on the files you name. It runs no typecheck.
+- **What `--packages=` checks.** Every check type for the package, and the typecheck also covers every package that
+  depends on it. Pass every package the slice changes, and every package that uses a shared file you changed.
 - **Run each ward command with `timeout: 600000`.** Run it once per state of the tree. Change something, then run it
   again. Never re-run an unchanged tree.
-- **Never run `--changed`.** In a worktree it measures from origin's default branch, so it grades the whole run's
-  unmerged work, not your slice.
-- **Never run a bare `npm run ward`.** It grades the whole repo. The run-end checker does that.
+- **Never run `--changed` or `--changed-from`.** Name the scope: `--files=` or `--packages=`.
+- **Never run a bare `npm run ward`.** It runs only before a merge into the main branch: the merge agent and the
+  run-end checker do that.
 - **Never run jest, tsc, eslint or playwright directly.** Ward runs them.
 - **Never run `npm run dev`, and never run e2e** unless this is the e2e slice (its worktree name ends in `-e2e`). A
   command guard refuses both anywhere else. They use fixed ports or folders, and the operator lets only one agent on

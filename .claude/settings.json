@@ -1,6 +1,31 @@
 {
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "crossSessionInbound": "refuse",
+  "promptCacheTtl": "1h",
+  "subagentPromptCacheTtl": "1h",
+  "promptSuggestionEnabled": false,
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "Bash|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "brutalpit-pre-bash"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__brutalpit__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "brutalpit-pre-mcp-caller"
+          }
+        ]
+      },
       {
         "matcher": "Write|Edit|MultiEdit",
         "hooks": [
@@ -43,24 +68,6 @@
           {
             "type": "command",
             "command": "lockdown-kit-pre-mcp-caller"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "brutalpit-pre-bash"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__brutalpit__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "brutalpit-pre-mcp-caller"
           }
         ]
       }
@@ -394,12 +401,5 @@
       "mcp__brutalpit__get-quest-work",
       "mcp__brutalpit__get-quest-health"
     ]
-  },
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
-  },
-  "crossSessionInbound": "refuse",
-  "promptCacheTtl": "1h",
-  "subagentPromptCacheTtl": "1h",
-  "promptSuggestionEnabled": false
+  }
 }

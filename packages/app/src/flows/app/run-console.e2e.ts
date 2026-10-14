@@ -11,207 +11,280 @@
  *   — already shows the cases that harness bought and runs them green.
  *
  * USAGE:
- * npm run ward -- --only e2e -- packages/app/src/flows/app/run-console.e2e.ts
+ * npm run ward -- --files=packages/app/src/flows/app/run-console.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect } from '../../../test/harnesses/e2e-fixtures';
+import { test, expect } from "../../../test/harnesses/e2e-fixtures";
 
-const BOOLEAN_AND = 'packages/syntax-repository/src/happy-path/boolean/and/and.ts';
-const CTOR_ARG_SPECIMEN = 'packages/syntax-repository/src/happy-path/class/needs-ctor-arg/needs-ctor-arg.ts';
-const INPUT_GAP_SPECIMEN = 'packages/syntax-repository/src/sad-path/input-gap/callback-param/callback-param.ts';
+const BOOLEAN_AND =
+  "packages/syntax-repository/src/happy-path/boolean/and/and.ts";
+const CTOR_ARG_SPECIMEN =
+  "packages/syntax-repository/src/happy-path/class/needs-ctor-arg/needs-ctor-arg.ts";
+const INPUT_GAP_SPECIMEN =
+  "packages/syntax-repository/src/sad-path/input-gap/callback-param/callback-param.ts";
 // Its PAID twin — byte for byte the same source, with a committed `callback-param.harness.ts` beside
 // it. The harness is the only difference between the two files, so the pair is what proves the invoice
 // above is closable rather than merely printable.
-const HARNESS_SPECIMEN = 'packages/syntax-repository/src/happy-path/harness/callback-param/callback-param.ts';
+const HARNESS_SPECIMEN =
+  "packages/syntax-repository/src/happy-path/harness/callback-param/callback-param.ts";
 
 // The INPUT-shaped gap, and the other producer of the same channel: `audit` takes a callback, no value
 // in the arrange vocabulary is a function, so the fill seam refuses it and the file derives nothing. This
 // one rides the ANALYSIS, so the panel states it the moment the file is opened — verbatim, because it is
 // product surface an LLM acts on with no human.
 const INPUT_GAP_LINE =
-  'audit — `audit` derives no case, because Assayer cannot construct an input it needs. It ' +
-  'builds inputs out of declared DATA — a scalar, a union, an array, or an object shape whose every ' +
-  'property is itself one — and refuses anything that bottoms out in a function or in a type carrying ' +
-  'nothing but its name: `report: (message: string) => string`. Substituting a stand-in would be worse ' +
-  'than deriving nothing: code that CALLS the value throws on it, and code that merely measures it ' +
-  'passes on something nobody supplied. Assayer read the signature perfectly — this is not syntax it ' +
+  "audit — `audit` derives no case, because Assayer cannot construct an input it needs. It " +
+  "builds inputs out of declared DATA — a scalar, a union, an array, or an object shape whose every " +
+  "property is itself one — and refuses anything that bottoms out in a function or in a type carrying " +
+  "nothing but its name: `report: (message: string) => string`. Substituting a stand-in would be worse " +
+  "than deriving nothing: code that CALLS the value throws on it, and code that merely measures it " +
+  "passes on something nobody supplied. Assayer read the signature perfectly — this is not syntax it " +
   "missed — so the value is the caller's to supply. Colocate a harness with this file, the same " +
   "basename with a `.harness.ts` extension, and declare the input: `import { assayerHarness } from " +
   "'@assayer/core'; assayerHarness({ inputs: { audit: { report: <a (message: string) => string> } } });`. " +
-  'Assayer then builds them from that declaration instead of refusing them; anything else still ' +
-  'standing between `audit` and a case is reported on its own line.';
+  "Assayer then builds them from that declaration instead of refusing them; anything else still " +
+  "standing between `audit` and a case is reported on its own line.";
 
-test.describe('Compiled Surface Explorer — Run flow + console', () => {
-  test('VALID: {happy-path/boolean/and/and.ts open, click Run} => the run finishes and every derived case reads the CLI verdict, with no run error', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+test.describe("Compiled Surface Explorer — Run flow + console", () => {
+  test("VALID: {happy-path/boolean/and/and.ts open, click Run} => the run finishes and every derived case reads the CLI verdict, with no run error", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`)
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // Opening a file LOADS its last run and never starts one, so all three cases read not-run here.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(3);
+    await expect(
+      window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]'),
+    ).toHaveCount(3);
 
-    await window.getByTestId('RUN_BUTTON').click();
+    await window.getByTestId("RUN_BUTTON").click();
 
     // run-done: the UI's Run spawns the same binary a human types, so this is the ONE assertion that
     // proves that spawn actually terminates. Only an e2e can: the desktop's `process.execPath` is the
     // ELECTRON binary here, exactly as in production, where a unit test's mocked spawn would not be.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(2);
-    await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
+    await expect(
+      window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]'),
+    ).toHaveCount(2);
+    await expect(window.getByTestId("RUN_ERROR")).toHaveCount(0);
 
     // The verdict reaches the rows of the run set. Assayer runs the fewest-runs set — grade(5, 7) and
     // grade(6, 2), which together take both arms — so the Every route case outside it, grade(6, 1),
     // still reads not run: it is listed and never executed.
-    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    const caseRows = await window
+      .getByTestId("TEST_CASE_ROW")
+      .allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'PASS grade(5, 7)',
-      'PASS grade(6, 2)',
-      'not run grade(6, 1)',
+      "PASS grade(5, 7)",
+      "PASS grade(6, 2)",
+      "not run grade(6, 1)",
     ]);
-    expect([...(await window.getByTestId('FEWEST_RUNS_ROW').allTextContents())].sort()).toStrictEqual([
-      'PASS grade(5, 7)',
-      'PASS grade(6, 2)',
-    ]);
-    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
-      "  => 3: 'pass'",
-      "  => 6: 'fail'",
-      "  => 6: (not run)",
-    ]);
+    expect(
+      [
+        ...(await window.getByTestId("FEWEST_RUNS_ROW").allTextContents()),
+      ].sort(),
+    ).toStrictEqual(["PASS grade(5, 7)", "PASS grade(6, 2)"]);
+    expect(
+      [...(await window.getByTestId("CASE_RETURN").allTextContents())].sort(),
+    ).toStrictEqual(["  => 3: 'pass'", "  => 6: 'fail'", "  => 6: (not run)"]);
 
     // A finished run must SAY it finished: the button leaves its loading state rather than spinning on.
-    await expect(window.locator('[data-testid="RUN_BUTTON"][data-loading="true"]')).toHaveCount(0);
+    await expect(
+      window.locator('[data-testid="RUN_BUTTON"][data-loading="true"]'),
+    ).toHaveCount(0);
 
     // The console carries the REAL CLI report — the same bytes `assayer unit` writes to a terminal,
     // streamed over the run-output channel. Anything less and the panel could disagree with the CLI.
-    await expect(window.getByTestId('RUN_CONSOLE_STATUS')).toHaveText('Finished');
-    await expect(window.getByTestId('RUN_CONSOLE_OUTPUT')).toContainText(
+    await expect(window.getByTestId("RUN_CONSOLE_STATUS")).toHaveText(
+      "Finished",
+    );
+    await expect(window.getByTestId("RUN_CONSOLE_OUTPUT")).toContainText(
       `${BOOLEAN_AND}  2/2 passed`,
     );
 
     // The rightmost column, and WHOLLY on screen. Geometry rather than presence, because a
     // fixed-width column that overflows the window is clipped away by the root's overflow:hidden
     // while still being visible to every query — present in the DOM, and invisible to a human.
-    const consoleBox = await window.getByTestId('RUN_CONSOLE').boundingBox();
-    const detailBox = await window.getByTestId('DETAIL_PANEL').boundingBox();
+    const consoleBox = await window.getByTestId("RUN_CONSOLE").boundingBox();
+    const detailBox = await window.getByTestId("DETAIL_PANEL").boundingBox();
     const innerWidth = await window.evaluate(() => globalThis.innerWidth);
 
-    expect(Math.round((consoleBox?.x ?? 0) + (consoleBox?.width ?? 0))).toBe(innerWidth);
+    expect(Math.round((consoleBox?.x ?? 0) + (consoleBox?.width ?? 0))).toBe(
+      innerWidth,
+    );
     expect((consoleBox?.x ?? 0) > (detailBox?.x ?? 0)).toBe(true);
 
     // Nothing was starved to make room: the code pane is still a usable width, not a slot of gutter.
-    const codeBox = await window.locator('.cm-editor').boundingBox();
+    const codeBox = await window.locator(".cm-editor").boundingBox();
 
     expect((codeBox?.width ?? 0) > 300).toBe(true);
   });
 
-  test('VALID: {app opened and a file selected, Run never clicked} => no run console and no run happens', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {app opened and a file selected, Run never clicked} => no run console and no run happens", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${BOOLEAN_AND}"]`)
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // Opening the app and clicking through the tree must never execute the repo. The console is the
     // Run action's own output, so its absence here is the evidence that nothing ran — as is every
     // case still reading not-run.
-    await expect(window.getByTestId('RUN_CONSOLE')).toHaveCount(0);
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(3);
+    await expect(window.getByTestId("RUN_CONSOLE")).toHaveCount(0);
+    await expect(
+      window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]'),
+    ).toHaveCount(3);
   });
 
-  test('VALID: {happy-path/class/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives `tally`, the constructor and the method on an instance built with its argument, and admits nothing', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${CTOR_ARG_SPECIMEN}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {happy-path/class/needs-ctor-arg/needs-ctor-arg.ts open, click Run} => the run drives `tally`, the constructor and the method on an instance built with its argument, and admits nothing", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${CTOR_ARG_SPECIMEN}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // `Repo`'s constructor needs a `url`, a string Assayer builds from its declared type, so every
     // derived case is on screen and none has run: `tally`, the constructor and the two arms of `find`.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]')).toHaveCount(4);
+    await expect(
+      window.locator('[data-testid="TEST_CASE_ROW"][data-status="not-run"]'),
+    ).toHaveCount(4);
 
-    await window.getByTestId('RUN_BUTTON').click();
+    await window.getByTestId("RUN_BUTTON").click();
 
     // run-done: the constructor runs through `new Repo(url)` with the representative string the fill
     // seam builds for `url`, and its body ends on line 6 with no value, so its exit carries `undefined`.
     // `find` runs on an instance built with that same `url`, one case per arm of `id > 0`: `id` is 0 for
     // the arm that returns on line 13 and 1 for the arm that returns on line 10. The rows are sorted so
     // the check does not depend on the order the cases run in.
-    await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(4);
-    expect([...(await window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]').allTextContents())].sort()).toStrictEqual([
+    await expect(window.getByTestId("RUN_ERROR")).toHaveCount(0);
+    await expect(
+      window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]'),
+    ).toHaveCount(4);
+    expect(
+      [
+        ...(await window
+          .locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')
+          .allTextContents()),
+      ].sort(),
+    ).toStrictEqual([
       'PASS constructor("abc123")',
-      'PASS find(0)',
-      'PASS find(1)',
-      'PASS tally(7)',
+      "PASS find(0)",
+      "PASS find(1)",
+      "PASS tally(7)",
     ]);
-    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
+    expect(
+      [...(await window.getByTestId("CASE_RETURN").allTextContents())].sort(),
+    ).toStrictEqual([
       "  => 10: 'hit'",
       "  => 13: 'miss'",
-      '  => 2: 8',
-      '  => 6: undefined',
+      "  => 2: 8",
+      "  => 6: undefined",
     ]);
 
     // Nothing is admitted: the method has an instance to run on, so no gap and no undriven row appears.
-    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
+    await expect(window.getByTestId("RUN_GAP")).toHaveCount(0);
   });
 
-  test('VALID: {sad-path/input-gap/callback-param/callback-param.ts open, Run never clicked} => the input-gap invoice is already on the panel', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${INPUT_GAP_SPECIMEN}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {sad-path/input-gap/callback-param/callback-param.ts open, Run never clicked} => the input-gap invoice is already on the panel", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${INPUT_GAP_SPECIMEN}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // The other producer, and the one that does NOT wait for a run. `audit` is understood perfectly and
     // derives nothing because its callback cannot be constructed — so without this row the panel shows
     // an entry with zero cases and no reason for it, which reads exactly like a file with nothing to
     // test. The whole line is asserted because the remedy is the part a reader acts on.
-    await expect(window.getByTestId('RUN_GAP')).toHaveText([INPUT_GAP_LINE]);
+    await expect(window.getByTestId("RUN_GAP")).toHaveText([INPUT_GAP_LINE]);
 
     // Nothing ran: no console, no verdict, and no case row to carry one. The invoice came off the
     // static analysis the compile already wrote.
-    await expect(window.getByTestId('RUN_CONSOLE')).toHaveCount(0);
-    await expect(window.getByTestId('TEST_CASE_ROW')).toHaveCount(0);
+    await expect(window.getByTestId("RUN_CONSOLE")).toHaveCount(0);
+    await expect(window.getByTestId("TEST_CASE_ROW")).toHaveCount(0);
   });
 
-  test('VALID: {happy-path/harness/callback-param/callback-param.ts open, click Run} => the colocated harness pays the invoice and both arms run green', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${HARNESS_SPECIMEN}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {happy-path/harness/callback-param/callback-param.ts open, click Run} => the colocated harness pays the invoice and both arms run green", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${HARNESS_SPECIMEN}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // The controlled half of the pair. Same source as the invoiced file above, plus a committed
     // `callback-param.harness.ts` — and BEFORE any run the panel already shows two cases where the twin
     // shows an invoice, because the harness overlay runs where the compiled view is resolved. Each row
     // names the key path rather than a value: only KEYS are cached, and the value is a live callback the
     // run resolves by loading the same file.
-    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
-    const derivedRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    await expect(window.getByTestId("RUN_GAP")).toHaveCount(0);
+    const derivedRows = await window
+      .getByTestId("TEST_CASE_ROW")
+      .allTextContents();
     expect([...derivedRows].sort()).toStrictEqual([
-      'not run audit(10, <harness inputs.audit.report>)',
-      'not run audit(11, <harness inputs.audit.report>)',
+      "not run audit(10, <harness inputs.audit.report>)",
+      "not run audit(11, <harness inputs.audit.report>)",
     ]);
-    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
-      '  => 3: (not run)',
-      '  => 6: (not run)',
-    ]);
+    expect(
+      [...(await window.getByTestId("CASE_RETURN").allTextContents())].sort(),
+    ).toStrictEqual(["  => 3: (not run)", "  => 6: (not run)"]);
 
-    await window.getByTestId('RUN_BUTTON').click();
+    await window.getByTestId("RUN_BUTTON").click();
 
     // run-done, and the whole point of the feature: the shim required the harness through the same
     // ts-jest transform, the registrar collected what its body declared, and the interpreter resolved
     // `inputs.audit.report` to the real function. `audit` CALLS what it is handed — a stand-in string
     // would throw and both rows would read ERROR — so two PASSes are the evidence that the author's own
     // value reached the code.
-    await expect(window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]')).toHaveCount(2);
-    await expect(window.getByTestId('RUN_ERROR')).toHaveCount(0);
+    await expect(
+      window.locator('[data-testid="TEST_CASE_ROW"][data-status="passed"]'),
+    ).toHaveCount(2);
+    await expect(window.getByTestId("RUN_ERROR")).toHaveCount(0);
 
-    const caseRows = await window.getByTestId('TEST_CASE_ROW').allTextContents();
+    const caseRows = await window
+      .getByTestId("TEST_CASE_ROW")
+      .allTextContents();
     expect([...caseRows].sort()).toStrictEqual([
-      'PASS audit(10, <harness inputs.audit.report>)',
-      'PASS audit(11, <harness inputs.audit.report>)',
+      "PASS audit(10, <harness inputs.audit.report>)",
+      "PASS audit(11, <harness inputs.audit.report>)",
     ]);
-    expect([...(await window.getByTestId('CASE_RETURN').allTextContents())].sort()).toStrictEqual([
-      "  => 3: 'audited:over'",
-      "  => 6: 'audited:under'",
-    ]);
+    expect(
+      [...(await window.getByTestId("CASE_RETURN").allTextContents())].sort(),
+    ).toStrictEqual(["  => 3: 'audited:over'", "  => 6: 'audited:under'"]);
 
     // The CLI report agrees, and still invoices nothing: a paid gap must not be reprinted beside the
     // cases it bought.
-    await expect(window.getByTestId('RUN_CONSOLE_STATUS')).toHaveText('Finished');
-    await expect(window.getByTestId('RUN_CONSOLE_OUTPUT')).toContainText(`${HARNESS_SPECIMEN}  2/2 passed`);
-    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
+    await expect(window.getByTestId("RUN_CONSOLE_STATUS")).toHaveText(
+      "Finished",
+    );
+    await expect(window.getByTestId("RUN_CONSOLE_OUTPUT")).toContainText(
+      `${HARNESS_SPECIMEN}  2/2 passed`,
+    );
+    await expect(window.getByTestId("RUN_GAP")).toHaveCount(0);
   });
 });

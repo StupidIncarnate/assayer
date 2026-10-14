@@ -7,28 +7,33 @@
  *   loop DARK SPOT, and the welded-arg unreachable-exit LINT.
  *
  * USAGE:
- * npm run ward -- --only e2e -- packages/app/src/flows/app/detail-admissions.e2e.ts
+ * npm run ward -- --files=packages/app/src/flows/app/detail-admissions.e2e.ts
  * // Boots the built dist + desktop-main; needs a display. Never touches the repo's own .assayer/cache.
  */
-import { test, expect } from '../../../test/harnesses/e2e-fixtures';
+import { test, expect } from "../../../test/harnesses/e2e-fixtures";
 
-const UNDRIVEN_OPAQUE_MODULE = 'packages/syntax-repository/src/sad-path/undriven/opaque-module/opaque-module.ts';
-const DEAD_SURFACE_UNCALLED = 'packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts';
-const UNREACHABLE_WELDED_ARG = 'packages/syntax-repository/src/sad-path/unreachable/welded-arg/welded-arg.ts';
-const LOOP_IN_FUNCTION = 'packages/syntax-repository/src/sad-path/loop/in-function/in-function.ts';
+const UNDRIVEN_OPAQUE_MODULE =
+  "packages/syntax-repository/src/sad-path/undriven/opaque-module/opaque-module.ts";
+const DEAD_SURFACE_UNCALLED =
+  "packages/syntax-repository/src/sad-path/dead-surface/dead-surface.ts";
+const UNREACHABLE_WELDED_ARG =
+  "packages/syntax-repository/src/sad-path/unreachable/welded-arg/welded-arg.ts";
+const LOOP_IN_FUNCTION =
+  "packages/syntax-repository/src/sad-path/loop/in-function/in-function.ts";
 
 // The exact row the panel shows for sad-path/undriven/opaque-module/opaque-module.ts: `L<line>: <label>`,
 // then a second line `↳ <terse reason>` (Playwright collapses the line break to a space) that the widget derives from the entry's undriven cause. The
 // full sentence core authors for the admission is the category's explanation, not this row.
-const UNDRIVEN_OPAQUE_MODULE_LINE = 'L1: opaque-module.ts ↳ Runs at import time (no entry parameters)';
+const UNDRIVEN_OPAQUE_MODULE_LINE =
+  "L1: opaque-module.ts ↳ Runs at import time (no entry parameters)";
 
 // The exact row the panel shows for sad-path/dead-surface/dead-surface.ts: `L<line>: <name> — <message>`,
 // with the message authored in core's followCallsTransformer. Asserted whole because the sentence IS the
 // admission, and it must cross core -> cache -> IPC intact.
 const DEAD_SURFACE_LINT_LINE =
-  'L1: unused — nothing in this file calls it, so it is dead surface: an unexported helper is ' +
-  'reachable only from its own file, and nothing here reaches it. Delete it, or consume it from a ' +
-  'caller that passes an input straight through — which the follower would then drive.';
+  "L1: unused — nothing in this file calls it, so it is dead surface: an unexported helper is " +
+  "reachable only from its own file, and nothing here reaches it. Delete it, or consume it from a " +
+  "caller that passes an input straight through — which the follower would then drive.";
 
 // The welded-ARGUMENT unreachable-exit LINT row, `L<line>: <name> — <message>`, the message authored in core's
 // unreachableLintTransformer. Following `report(){ return decide(3) }` welds `3` into `decide`'s `value`,
@@ -38,20 +43,28 @@ const DEAD_SURFACE_LINT_LINE =
 // rather than the scope's own source). Asserted whole for the same reason — the sentence IS the finding,
 // and it must cross core -> cache -> IPC intact.
 const UNREACHABLE_WELDED_ARG_LINE =
-  'L3: report — `decide` can never reach the exit on line 3: `value` is welded to `3`, so the branch ' +
-  'on line 2 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm ' +
-  'should be deleted.';
+  "L3: report — `decide` can never reach the exit on line 3: `value` is welded to `3`, so the branch " +
+  "on line 2 always takes its other arm and this one is dead. Either a comparison is wrong, or this arm " +
+  "should be deleted.";
 
 // The exact DARK SPOT row for sad-path/loop/in-function/in-function.ts: `L<line>: <kind>`. Core's
 // dark-spot channel admits the loop (the loop ratchet: no handler exists for `for…of` yet), so it is
 // ADMITTED, not skipped.
-const LOOP_DARK_SPOT_LINE = 'L4: ForOfStatement';
+const LOOP_DARK_SPOT_LINE = "L4: ForOfStatement";
 
-test.describe('Compiled Surface Explorer — admission rows', () => {
-  test('VALID: {sad-path/undriven/opaque-module/opaque-module.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_OPAQUE_MODULE}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+test.describe("Compiled Surface Explorer — admission rows", () => {
+  test("VALID: {sad-path/undriven/opaque-module/opaque-module.ts selected} => the panel states the UNDRIVEN admission verbatim instead of reading as a file with nothing to test", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${UNDRIVEN_OPAQUE_MODULE}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // The whole assertion is the exactness, and only a REAL window can make it. The panel's own unit
     // test hands the widget an UndrivenEntryStub carrying a reason the test itself wrote, so it would
@@ -59,7 +72,7 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     // into the cache blob, contract-parsed back out, and carried over Electron IPC before any pixel
     // renders. Drop it at any one of those hops and every unit test still passes. This asserts the
     // sentence core authored arrived intact across all of them.
-    const undriven = window.getByTestId('UNDRIVEN');
+    const undriven = window.getByTestId("UNDRIVEN");
     await expect(undriven).toBeVisible();
     await expect(undriven).toHaveText(UNDRIVEN_OPAQUE_MODULE_LINE);
 
@@ -68,80 +81,117 @@ test.describe('Compiled Surface Explorer — admission rows', () => {
     // no entries to list and falls to "No entries in this file" — a file of live top-level branching
     // reported as having nothing to test. That is the reads-as-complete lie, and these two states are
     // one `undriven.length` apart.
-    await expect(window.getByTestId('TESTS_EMPTY')).toHaveCount(0);
+    await expect(window.getByTestId("TESTS_EMPTY")).toHaveCount(0);
 
     // The two routes through the opaque `Math.random()` branch are declared, so the panel lists them
     // under BOTH labelled sets: "Every route" and "Fewest runs", two routes each. Assayer cannot steer
     // the branch, so every one is marked undriven and none of them runs: the rows read data-driven
     // false and data-running false, and the panel offers no Run whose verdict it already states in full.
-    await expect(window.getByTestId('CASE_SET_LABEL')).toHaveText(['Every route · 2', 'Fewest runs · 2']);
-    const everyRouteRows = window.locator('[data-testid="CASE_SET"][data-set="every-route"] [data-testid="TEST_CASE_ROW"]');
+    await expect(window.getByTestId("CASE_SET_LABEL")).toHaveText([
+      "Every route · 2",
+      "Fewest runs · 2",
+    ]);
+    const everyRouteRows = window.locator(
+      '[data-testid="CASE_SET"][data-set="every-route"] [data-testid="TEST_CASE_ROW"]',
+    );
     await expect(everyRouteRows).toHaveCount(2);
-    await expect(window.getByTestId('FEWEST_RUNS_ROW')).toHaveCount(2);
-    await expect(window.getByTestId('CASE_UNDRIVEN')).toHaveText(['undriven', 'undriven']);
-    await expect(window.getByTestId('FEWEST_RUNS_UNDRIVEN')).toHaveText(['undriven', 'undriven']);
-    await expect(window.locator('[data-driven="true"], [data-running="true"]')).toHaveCount(0);
-    await expect(window.getByTestId('RUN_BUTTON')).toHaveCount(0);
+    await expect(window.getByTestId("FEWEST_RUNS_ROW")).toHaveCount(2);
+    await expect(window.getByTestId("CASE_UNDRIVEN")).toHaveText([
+      "undriven",
+      "undriven",
+    ]);
+    await expect(window.getByTestId("FEWEST_RUNS_UNDRIVEN")).toHaveText([
+      "undriven",
+      "undriven",
+    ]);
+    await expect(
+      window.locator('[data-driven="true"], [data-running="true"]'),
+    ).toHaveCount(0);
+    await expect(window.getByTestId("RUN_BUTTON")).toHaveCount(0);
   });
 
-  test('VALID: {sad-path/dead-surface/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${DEAD_SURFACE_UNCALLED}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {sad-path/dead-surface/dead-surface.ts selected} => the panel states the dead-surface LINT verbatim, beside the driven exported greet", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${DEAD_SURFACE_UNCALLED}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // Stage C across the real crossing: `unused` is a private nothing consumes, so it is a dead-surface
     // LINT — the repo's debt, on its own row, worded exactly as `assayer unit` prints it. Like the
     // undriven admission, only a real window proves the sentence survived core -> cache -> IPC intact.
-    const lint = window.getByTestId('LINT');
+    const lint = window.getByTestId("LINT");
     await expect(lint).toBeVisible();
     await expect(lint).toHaveText(DEAD_SURFACE_LINT_LINE);
 
     // It is a LINT, not an undriven admission and not a dark spot: the other channels stay empty, and
     // the exported `greet` beside it is still a driven entry.
-    await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
-    await expect(window.getByTestId('DARK_SPOT')).toHaveCount(0);
-    await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
+    await expect(window.getByTestId("UNDRIVEN")).toHaveCount(0);
+    await expect(window.getByTestId("DARK_SPOT")).toHaveCount(0);
+    await expect(window.getByTestId("TEST_ENTRY")).toHaveCount(1);
   });
 
-  test('VALID: {sad-path/loop/in-function/in-function.ts selected} => the panel states the ForOfStatement DARK SPOT verbatim, and no other admission channel co-renders', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${LOOP_IN_FUNCTION}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {sad-path/loop/in-function/in-function.ts selected} => the panel states the ForOfStatement DARK SPOT verbatim, and no other admission channel co-renders", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${LOOP_IN_FUNCTION}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // The loop ratchet's ONLY UI proof: `for…of` has no handler, so the walk admits it as a dark spot
     // rather than skipping it — and that admission must cross core -> cache -> IPC to a reader intact, or
     // the file reads as fully understood while a whole loop body is uncovered. Grape channel, on its row.
-    const darkSpot = window.getByTestId('DARK_SPOT');
+    const darkSpot = window.getByTestId("DARK_SPOT");
     await expect(darkSpot).toBeVisible();
     await expect(darkSpot).toHaveText(LOOP_DARK_SPOT_LINE);
 
     // A dark spot is ASSAYER's debt and none of the other three: the file's own driven `sumAll` entry
     // still lists its case beside it, but no undriven, no lint, and no run gap ever share the panel.
-    await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
-    await expect(window.getByTestId('LINT')).toHaveCount(0);
-    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
-    await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
+    await expect(window.getByTestId("UNDRIVEN")).toHaveCount(0);
+    await expect(window.getByTestId("LINT")).toHaveCount(0);
+    await expect(window.getByTestId("RUN_GAP")).toHaveCount(0);
+    await expect(window.getByTestId("TEST_ENTRY")).toHaveCount(1);
   });
 
-  test('VALID: {sad-path/unreachable/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT unreachable-exit LINT verbatim, beside the single driven report entry, with no other channel co-rendering', async ({ smokeWindow: window }) => {
-    await expect(window.getByTestId('FILE_TREE')).toBeVisible({ timeout: 30_000 });
-    await window.locator(`[data-testid="FILE_TREE_FILE"][data-relpath="${UNREACHABLE_WELDED_ARG}"]`).click();
-    await expect(window.getByTestId('DETAIL_PANEL')).toBeVisible();
+  test("VALID: {sad-path/unreachable/welded-arg/welded-arg.ts selected} => the panel states the welded-ARGUMENT unreachable-exit LINT verbatim, beside the single driven report entry, with no other channel co-rendering", async ({
+    smokeWindow: window,
+  }) => {
+    await expect(window.getByTestId("FILE_TREE")).toBeVisible({
+      timeout: 30_000,
+    });
+    await window
+      .locator(
+        `[data-testid="FILE_TREE_FILE"][data-relpath="${UNREACHABLE_WELDED_ARG}"]`,
+      )
+      .click();
+    await expect(window.getByTestId("DETAIL_PANEL")).toBeVisible();
 
     // Following the welded call FUNNELS `decide` into `report` and EVALUATES it: `decide`'s dead `> 5` arm
     // rides the LINT channel (the repo's debt), keyed on `report` — the surface that owns it — worded
     // exactly as `assayer unit` prints it, and it must arrive verbatim across core -> cache -> IPC. This
     // is the funnel twin of the welded-const unreachable-exit.
-    const lint = window.getByTestId('LINT');
+    const lint = window.getByTestId("LINT");
     await expect(lint).toBeVisible();
     await expect(lint).toHaveText(UNREACHABLE_WELDED_ARG_LINE);
 
     // An unreachable-exit is a LINT, never an undriven admission, a dark spot, or a run gap: welded-arg is
     // no longer undriven, so those channels stay empty. `decide` FUNNELS into `report`, so `report` is the
     // SOLE driven entry — no separate `decide` entry — listing its one live-arm funnel case beside the lint.
-    await expect(window.getByTestId('UNDRIVEN')).toHaveCount(0);
-    await expect(window.getByTestId('DARK_SPOT')).toHaveCount(0);
-    await expect(window.getByTestId('RUN_GAP')).toHaveCount(0);
-    await expect(window.getByTestId('TEST_ENTRY')).toHaveCount(1);
+    await expect(window.getByTestId("UNDRIVEN")).toHaveCount(0);
+    await expect(window.getByTestId("DARK_SPOT")).toHaveCount(0);
+    await expect(window.getByTestId("RUN_GAP")).toHaveCount(0);
+    await expect(window.getByTestId("TEST_ENTRY")).toHaveCount(1);
   });
 });
