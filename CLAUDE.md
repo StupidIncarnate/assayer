@@ -54,9 +54,7 @@ checked out as sibling directories, next to this repo, on disk, and built.
 `npm run init` runs `lockdown-kit init && brutalpit init` to install their hooks,
 MCP servers and settings into this repo.
 
-Verify a change with a scoped ward (`npm run ward -- --files=<the files you edited>`,
-or `--packages=<package>` when you own a whole package), `npm run test:syntax` and
-`npm run test:generated`. A bare `npm run ward` runs only before a merge into `main`.
+Verify a change with ward, `npm run test:syntax` and `npm run test:generated`.
 Neither specimen catalogue is part of `ward`'s test graph, so `ward` alone will not
 catch a regression in either:
 

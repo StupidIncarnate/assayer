@@ -1331,15 +1331,7 @@ npx tsx /tmp/.../probe.ts
 ```
 
 Then run `test:syntax` and a scoped ward. `test:syntax` is NOT part of ward's Jest
-graph, so running ward alone does not cover it:
-
-```bash
-npm run test:syntax        # the specimen catalogue
-npm run ward -- --files=<the files you edited>   # lint, unit, integration, e2e specs named
-npm run ward -- --packages=core                  # all five checks; use when you own the whole package
-```
-
-A bare `npm run ward` runs only before a merge into `main`.
+graph, so running ward alone does not cover it.
 
 Two properties must hold, and a probe script is a cheap way to check both:
 
