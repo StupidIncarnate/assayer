@@ -11,10 +11,10 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
-      "import": "./dist/src/index.js",
-      "require": "./dist/src/index.js",
-      "types": "./dist/src/index.d.ts"
+      "source": "./index.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./package.json": "./package.json",
     "./*.proxy": {
