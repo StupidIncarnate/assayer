@@ -2,5 +2,11 @@
   "extends": [
     "../../../tsconfig.json",
     "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.package"
-  ]
+  ],
+  "compilerOptions": {
+    "lib": [
+      "ES2022",
+      "DOM"
+    ]
+  }
 }
