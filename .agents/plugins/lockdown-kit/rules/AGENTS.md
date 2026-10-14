@@ -132,7 +132,7 @@ Call both tools, read their output, THEN plan your approach.
 |------|-------------|
 | `--only lint,typecheck,unit` | Comma-separated check types. Omit for all. |
 | `--onlyTests <regex>` | Filter tests by name. `\|` alternates. |
-| `-- file1 file2` | Passthrough file paths. |
+| `-- file1 file2` | Files only = QUICK check: lint, unit, integration, no wait; typecheck/e2e need `--only`. |
 | `--changed` | All checks, on every file that differs from origin's default branch: committed, uncommitted and untracked. |
 | `--changed-from=<branch>` | `--changed`, measured from that branch: for a worktree. Takes `--only`. |
 
@@ -145,7 +145,7 @@ Call both tools, read their output, THEN plan your approach.
 ```bash
 npm run ward                                  # All checks
 npm run ward -- -- pkg/a.ts pkg/a.test.ts     # THESE FILES — ward picks the checks
-npm run ward -- --only unit -- pkg/a.test.ts  # These files, one check type
+npm run ward -- --only unit -- pkg/a.test.ts  # One check type
 npm run ward -- -- packages/hooks             # One package
 npm run ward -- --changed                     # Every file this branch changed
 ```
@@ -160,13 +160,13 @@ Pass every path you touched after `--`. Repo-relative, no `./`.
 
 ## Ward Invocation Discipline
 
-**Scope ward to the job.** Given specific files, run ward on those files and nothing wider: `npm run ward -- -- <files>`. Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
+**Scope ward to the job.** Given specific files, run ward on those files and nothing wider: `npm run ward -- -- <files>`. That is the QUICK check: lint, unit, integration, started at once; typecheck needs `--only typecheck` or a wider run. Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
 
-**Never `cd` into a package.** Ward runs from the root; scope it with paths after `--`. Prefer FILE paths.
+**Never `cd` into a package.** Ward runs from the root. Prefer FILE paths.
 
-**Let it block, with `timeout: 600000`** (the 2-min default kills a wide run). A wide run outlives even that; background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
+**Let it block, with `timeout: 600000`.** A wide run outlives even that; background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
 
-**Run it ONCE per tree state, and fix on `--changed`.** Right flags first time; never re-run unchanged state. A FIX is a new state; a red from a bare run costs a whole-repo run to confirm, where `--changed` runs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Typecheck runs first only if requested (bare, `--changed`, `--only typecheck`), on scope + dependents; a type error blocks the rest: `build errored, could not proceed`. `--only lint,unit` skips it.
+**Run it ONCE per tree state, and fix on `--changed`.** Never re-run unchanged state. A bare run's red costs a whole-repo run to confirm, `--changed` only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. Typecheck runs first only if requested (bare, `--changed`, `--only typecheck`), on scope + dependents; a type error blocks the rest: `build errored, could not proceed`. `--only lint,unit` skips it.
 
 **After merging the default branch,** run `npm run ward -- --changed` first (worktree: `--changed-from=<root branch>`). **A changed shared file** (harness, proxy, stub, helper) needs every test importing it: find them with `discover`, pass them after `--`.
 
