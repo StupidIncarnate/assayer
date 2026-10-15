@@ -369,7 +369,6 @@
       "Bash(lsof:*)",
       "Bash(ps:*)",
       "Bash(python3:*)",
-      "Bash(lockdown-kit siegelense:*)",
       "mcp__brutalpit__get-quest",
       "mcp__brutalpit__modify-quest",
       "mcp__brutalpit__signal-back",
