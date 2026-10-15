@@ -3,8 +3,8 @@
  * shape. The value is a string because the environment only holds strings.
  *
  * USAGE:
- * setEnv('LOCKDOWN_KIT_HOME', '/tmp/dm-test');
- * // Sets process.env.LOCKDOWN_KIT_HOME; every child spawned afterwards inherits it
+ * setEnv('POKAYOKE_HOME', '/tmp/dm-test');
+ * // Sets process.env.POKAYOKE_HOME; every child spawned afterwards inherits it
  */
 
 export const setEnv = (name: string, value: string): void => {

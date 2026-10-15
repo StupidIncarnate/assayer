@@ -1,6 +1,6 @@
 import { exec, type ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
-import { registerMock, registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock, registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 export const runFireAndForgetProxy = (): {
   setupSuccess: (params: { command: string }) => void;

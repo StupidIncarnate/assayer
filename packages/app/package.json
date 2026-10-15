@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:clean": "rm -rf dist && npm run build",
-    "ward": "lockdown-kit-ward"
+    "ward": "pokayoke-ward"
   },
   "dependencies": {
     "@assayer/bin": "*",

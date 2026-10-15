@@ -24,5 +24,4 @@ export const fileHandleSchema = z
       typeof value.stat === 'function' &&
       typeof value.read === 'function' &&
       typeof value.close === 'function',
-  )
-  .brand<'#GatewayFileHandle'>();
+  );

@@ -5,7 +5,7 @@
  * UseStubIndexResultStub();
  * // Returns a valid UseStubIndexResult
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 import { StubViewStub } from "@assayer/shared/contracts/stub-view/stub-view.stub";
 
 import { useStubIndexResultContract } from "./use-stub-index-result-contract";

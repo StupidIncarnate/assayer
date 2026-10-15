@@ -7,13 +7,13 @@ describe('realpath', () => {
     it('VALID: {path: a chain of symlinks} => returns the fully resolved path', async () => {
       const proxy = realpathProxy();
       proxy.returns({
-        path: '/repo/.lockdown-kit-assets/siegelense-assets',
-        resolved: '/home/user/.ls-lockdown-kit/siegelense',
+        path: '/repo/.pokayoke-assets/siegelense-assets',
+        resolved: '/home/user/.ls-pokayoke/siegelense',
       });
 
-      const result = await realpath('/repo/.lockdown-kit-assets/siegelense-assets');
+      const result = await realpath('/repo/.pokayoke-assets/siegelense-assets');
 
-      expect(result).toBe('/home/user/.ls-lockdown-kit/siegelense');
+      expect(result).toBe('/home/user/.ls-pokayoke/siegelense');
     });
   });
 
@@ -38,10 +38,10 @@ describe('realpath', () => {
 
     it('ERROR: {path: a parent segment that is a file} => rejects with the raw ENOTDIR error', async () => {
       const proxy = realpathProxy();
-      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
+      proxy.notADirectory({ path: '/repo/.pokayoke.json/nested' });
 
-      await expect(realpath('/repo/.lockdown-kit.json/nested')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' }),
+      await expect(realpath('/repo/.pokayoke.json/nested')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.pokayoke.json/nested' }),
       );
     });
   });
@@ -51,12 +51,12 @@ describe('realpath', () => {
       const proxy = realpathProxy();
       proxy.returnsMatchingPath({
         path: (value) => String(value).endsWith('siegelense-assets'),
-        resolved: '/home/user/.ls-lockdown-kit/siegelense',
+        resolved: '/home/user/.ls-pokayoke/siegelense',
       });
 
       const result = await realpath('/resolved/at/runtime/siegelense-assets');
 
-      expect(result).toBe('/home/user/.ls-lockdown-kit/siegelense');
+      expect(result).toBe('/home/user/.ls-pokayoke/siegelense');
     });
 
     it('ERROR: {throwsMatchingPath, a predicate} => rejects with the staged error', async () => {
@@ -75,15 +75,15 @@ describe('realpath', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = realpathProxy();
       proxy.returns({
-        path: '/repo/.lockdown-kit-assets/siegelense-assets',
-        resolved: '/home/user/.ls-lockdown-kit/siegelense',
+        path: '/repo/.pokayoke-assets/siegelense-assets',
+        resolved: '/home/user/.ls-pokayoke/siegelense',
       });
 
-      await realpath('/repo/.lockdown-kit-assets/siegelense-assets');
+      await realpath('/repo/.pokayoke-assets/siegelense-assets');
 
       expect(
-        proxy.getCallsFor({ path: '/repo/.lockdown-kit-assets/siegelense-assets' }),
-      ).toStrictEqual([['/repo/.lockdown-kit-assets/siegelense-assets']]);
+        proxy.getCallsFor({ path: '/repo/.pokayoke-assets/siegelense-assets' }),
+      ).toStrictEqual([['/repo/.pokayoke-assets/siegelense-assets']]);
     });
   });
 });

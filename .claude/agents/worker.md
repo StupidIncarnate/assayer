@@ -8,9 +8,9 @@ hooks:
     - matcher: Bash
       hooks:
         - type: command
-          command: lockdown-kit-pre-bash-role worker
+          command: '"$CLAUDE_PROJECT_DIR"/node_modules/.bin/pokayoke-pre-bash-role worker'
 ---
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Worker
 

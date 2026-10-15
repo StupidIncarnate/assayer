@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'net';
 import { EventEmitter } from 'events';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 interface StagedPort {
   port: number;

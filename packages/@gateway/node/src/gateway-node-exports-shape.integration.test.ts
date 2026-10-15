@@ -13,8 +13,8 @@
  * gone from every gateway package's end state, and G26 step 4 is the item that removes them here.
  *
  * `.integration.test.ts`, not `.test.ts`: this file has no single implementation companion —
- * `@legendscribe/lockdown-kit/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
- * `config-lockdown-kit-broker.ts`) only for `**\/src/*.integration.test.ts`.
+ * `@legendscribe/pokayoke/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
+ * `config-pokayoke-broker.ts`) only for `**\/src/*.integration.test.ts`.
  *
  * USAGE:
  * npm run ward -- --files=packages/@gateway/node/src/gateway-node-exports-shape.integration.test.ts

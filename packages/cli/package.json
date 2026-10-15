@@ -14,7 +14,7 @@
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
     "postbuild": "chmod +x dist/bin/*.js 2>/dev/null || true",
-    "ward": "lockdown-kit-ward"
+    "ward": "pokayoke-ward"
   },
   "dependencies": {
     "@assayer/bin": "*",

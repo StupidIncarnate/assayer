@@ -6,9 +6,9 @@ describe('readJsonFileIfExists', () => {
   describe('successful reads', () => {
     it('VALID: {path: valid JSON file} => returns the parsed value', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '{"port":3737}' });
 
-      const result = await readJsonFileIfExists('/repo/.lockdown-kit.json');
+      const result = await readJsonFileIfExists('/repo/.pokayoke.json');
 
       expect(result).toStrictEqual({ port: 3737 });
     });
@@ -28,19 +28,19 @@ describe('readJsonFileIfExists', () => {
   describe('invalid content', () => {
     it('INVALID: {path: malformed JSON} => throws a SyntaxError naming the path', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{not json' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '{not json' });
 
-      await expect(readJsonFileIfExists('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
+      await expect(readJsonFileIfExists('/repo/.pokayoke.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.pokayoke.json'),
       );
     });
 
     it('EMPTY: {path: an empty file} => throws a SyntaxError, not null', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '' });
 
-      await expect(readJsonFileIfExists('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
+      await expect(readJsonFileIfExists('/repo/.pokayoke.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.pokayoke.json'),
       );
     });
   });
@@ -86,12 +86,12 @@ describe('readJsonFileIfExists', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readJsonFileIfExistsProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '{"port":3737}' });
 
-      await readJsonFileIfExists('/repo/.lockdown-kit.json');
+      await readJsonFileIfExists('/repo/.pokayoke.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
-        ['/repo/.lockdown-kit.json', 'utf8'],
+      expect(proxy.getCallsFor({ path: '/repo/.pokayoke.json' })).toStrictEqual([
+        ['/repo/.pokayoke.json', 'utf8'],
       ]);
     });
   });

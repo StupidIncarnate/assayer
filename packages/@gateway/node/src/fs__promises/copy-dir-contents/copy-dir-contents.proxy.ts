@@ -1,5 +1,5 @@
 import { readdir } from 'fs/promises';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 import type { FsError } from '../../fs/is-fs-error/fs-error';
 import { copyDirContentsEntriesRecurseProxy } from '../copy-dir-contents-entries-recurse/copy-dir-contents-entries-recurse.proxy';
 

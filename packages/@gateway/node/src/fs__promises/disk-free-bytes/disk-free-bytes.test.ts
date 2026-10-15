@@ -6,9 +6,9 @@ describe('diskFreeBytes', () => {
   describe('successful reads', () => {
     it('VALID: {path: a real filesystem} => returns available blocks times block size', async () => {
       const proxy = diskFreeBytesProxy();
-      proxy.returns({ path: '/home/user/.ls-lockdown-kit', bavail: 1000, bsize: 4096 });
+      proxy.returns({ path: '/home/user/.ls-pokayoke', bavail: 1000, bsize: 4096 });
 
-      const result = await diskFreeBytes('/home/user/.ls-lockdown-kit');
+      const result = await diskFreeBytes('/home/user/.ls-pokayoke');
 
       expect(result).toBe(4096000);
     });
@@ -38,12 +38,12 @@ describe('diskFreeBytes', () => {
     it('VALID: {returnsMatchingPath, a predicate} => resolves for a path the predicate accepts', async () => {
       const proxy = diskFreeBytesProxy();
       proxy.returnsMatchingPath({
-        path: (value) => String(value).endsWith('.ls-lockdown-kit'),
+        path: (value) => String(value).endsWith('.ls-pokayoke'),
         bavail: 1000,
         bsize: 4096,
       });
 
-      const result = await diskFreeBytes('/resolved/at/runtime/.ls-lockdown-kit');
+      const result = await diskFreeBytes('/resolved/at/runtime/.ls-pokayoke');
 
       expect(result).toBe(4096000);
     });
@@ -63,12 +63,12 @@ describe('diskFreeBytes', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = diskFreeBytesProxy();
-      proxy.returns({ path: '/home/user/.ls-lockdown-kit', bavail: 1000, bsize: 4096 });
+      proxy.returns({ path: '/home/user/.ls-pokayoke', bavail: 1000, bsize: 4096 });
 
-      await diskFreeBytes('/home/user/.ls-lockdown-kit');
+      await diskFreeBytes('/home/user/.ls-pokayoke');
 
-      expect(proxy.getCallsFor({ path: '/home/user/.ls-lockdown-kit' })).toStrictEqual([
-        ['/home/user/.ls-lockdown-kit'],
+      expect(proxy.getCallsFor({ path: '/home/user/.ls-pokayoke' })).toStrictEqual([
+        ['/home/user/.ls-pokayoke'],
       ]);
     });
   });

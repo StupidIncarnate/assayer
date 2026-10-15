@@ -1,6 +1,6 @@
 import { ModuleKind, getImpliedNodeFormatForFile } from '../bundled-typescript/bundled-typescript';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/pokayoke/testing/register-mock';
 
 // `getImpliedNodeFormatForFile` takes (fileName, packageJsonInfoCache, host, options). A stage names the
 // file. The `ts.sys` host is never part of the address. A caller that asks twice for one file, once

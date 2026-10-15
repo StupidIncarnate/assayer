@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { walkContextContract } from './walk-context-contract';
 import type { WalkContext } from './walk-context-contract';

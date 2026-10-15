@@ -11,12 +11,12 @@
  * (`WebSocket`, not `websocket`), per the layout standard's rule that a global keeps its own exact
  * casing. `RESERVED_TEST_SUPPORT_FOLDER` is duplicated by hand from
  * `gatewayReservedFolderNamesStatics.folders.testSupport` (`eslint-plugin`) — a gateway file may not
- * import `@legendscribe/lockdown-kit-shared` (`gateway-import-boundary`), and eslint-plugin is the one non-gateway
+ * import `@legendscribe/pokayoke/shared` (`gateway-import-boundary`), and eslint-plugin is the one non-gateway
  * place that name can be canonical. Change both when it changes.
  *
  * `.integration.test.ts`, not `.test.ts`: this file has no single implementation companion —
- * `@legendscribe/lockdown-kit/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
- * `config-lockdown-kit-broker.ts`) only for `**\/src/*.integration.test.ts`.
+ * `@legendscribe/pokayoke/enforce-test-colocation` requires one for a plain `.test.ts`, and is turned off (in
+ * `config-pokayoke-broker.ts`) only for `**\/src/*.integration.test.ts`.
  *
  * USAGE:
  * npm run ward -- --files=packages/@gateway/browser/src/gateway-browser-globals.integration.test.ts

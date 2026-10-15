@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 // Nothing is spied until a test calls setupCwd, so a caller that never stages a directory reads
 // the real process.cwd(). process.cwd takes no argument, so the one staged value answers every

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { generateRunResultContract } from './generate-run-result-contract';
 import type { GenerateRunResult } from './generate-run-result-contract';

@@ -36,7 +36,7 @@ describe('spawnDetached()', () => {
         command: 'npm',
         args: ['run', 'dev:no-watch'],
         cwd: '/repo',
-        env: { LOCKDOWN_KIT_PORT: '34172' },
+        env: { POKAYOKE_PORT: '34172' },
         stdoutFd: 12,
         stderrFd: 13,
       });
@@ -46,7 +46,7 @@ describe('spawnDetached()', () => {
       ).toStrictEqual([
         {
           cwd: '/repo',
-          env: { LOCKDOWN_KIT_PORT: '34172' },
+          env: { POKAYOKE_PORT: '34172' },
           detached: true,
           stdio: ['ignore', 12, 13],
         },

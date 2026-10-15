@@ -5,7 +5,7 @@
  * TypeofDomainStub();
  * // Returns a valid TypeofDomain
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 
 import { typeofDomainContract } from "./typeof-domain-contract";
 import type { TypeofDomain } from "./typeof-domain-contract";

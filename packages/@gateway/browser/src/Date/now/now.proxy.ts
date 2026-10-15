@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 // Date.now takes no argument, so there is nothing to key a stage on: the one staged value answers
 // every read until the next setupNow replaces it. Nothing is staged by default, so a test that

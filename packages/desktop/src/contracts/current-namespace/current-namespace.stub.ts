@@ -5,7 +5,7 @@
  * CurrentNamespaceStub();
  * // Returns a valid CurrentNamespace
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 
 import { currentNamespaceContract } from "./current-namespace-contract";
 import type { CurrentNamespace } from "./current-namespace-contract";

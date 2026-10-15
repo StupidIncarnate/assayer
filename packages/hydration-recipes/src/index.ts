@@ -1,7 +1,7 @@
 /**
  * PURPOSE: The starter surface for this `hydration-recipes` package — the three names
- * `recipesConventionStatics.exports` requires (`@legendscribe/lockdown-kit-shared/statics`), so
- * `lockdown-kit siegelense recipes` answers with an empty listing the moment this package is
+ * `recipesConventionStatics.exports` requires (`@legendscribe/pokayoke/shared/statics`), so
+ * `pokayoke siegelense recipes` answers with an empty listing the moment this package is
  * built, instead of throwing `RecipesBuildMissingError`. Add a recipe under a sibling
  * `src/recipes-<name>/` folder and wire it into `StartHydrationRecipes.listing`'s return array
  * and `StartHydrationRecipes.seed`'s dispatch.

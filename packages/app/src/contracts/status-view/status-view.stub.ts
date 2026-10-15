@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { statusViewContract } from './status-view-contract';
 import type { StatusView } from './status-view-contract';

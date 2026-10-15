@@ -5,7 +5,7 @@
  * UseAssayerStatusResultStub();
  * // Returns a valid UseAssayerStatusResult
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 import { StatusViewStub } from "../status-view/status-view.stub";
 
 import { useAssayerStatusResultContract } from "./use-assayer-status-result-contract";

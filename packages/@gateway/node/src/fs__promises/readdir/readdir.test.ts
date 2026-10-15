@@ -7,11 +7,11 @@ describe('readdir', () => {
     it('VALID: {path: directory with entries} => returns their names', async () => {
       const proxy = readdirProxy();
       proxy.returns({
-        path: '/repo/.ls-lockdown-kit/quests',
+        path: '/repo/.ls-pokayoke/quests',
         names: ['quest-1.json', 'quest-2.json'],
       });
 
-      const result = await readdir('/repo/.ls-lockdown-kit/quests');
+      const result = await readdir('/repo/.ls-pokayoke/quests');
 
       expect(result).toStrictEqual(['quest-1.json', 'quest-2.json']);
     });
@@ -20,9 +20,9 @@ describe('readdir', () => {
   describe('empty directory', () => {
     it('EMPTY: {path: an empty directory} => returns an empty array', async () => {
       const proxy = readdirProxy();
-      proxy.returns({ path: '/repo/.ls-lockdown-kit/quests', names: [] });
+      proxy.returns({ path: '/repo/.ls-pokayoke/quests', names: [] });
 
-      const result = await readdir('/repo/.ls-lockdown-kit/quests');
+      const result = await readdir('/repo/.ls-pokayoke/quests');
 
       expect(result).toStrictEqual([]);
     });
@@ -49,10 +49,10 @@ describe('readdir', () => {
 
     it('ERROR: {path: a parent segment that is a file} => rejects with the raw ENOTDIR error', async () => {
       const proxy = readdirProxy();
-      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
+      proxy.notADirectory({ path: '/repo/.pokayoke.json/nested' });
 
-      await expect(readdir('/repo/.lockdown-kit.json/nested')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' }),
+      await expect(readdir('/repo/.pokayoke.json/nested')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.pokayoke.json/nested' }),
       );
     });
   });
@@ -85,12 +85,12 @@ describe('readdir', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readdirProxy();
-      proxy.returns({ path: '/repo/.ls-lockdown-kit/quests', names: ['quest-1.json'] });
+      proxy.returns({ path: '/repo/.ls-pokayoke/quests', names: ['quest-1.json'] });
 
-      await readdir('/repo/.ls-lockdown-kit/quests');
+      await readdir('/repo/.ls-pokayoke/quests');
 
-      expect(proxy.getCallsFor({ path: '/repo/.ls-lockdown-kit/quests' })).toStrictEqual([
-        ['/repo/.ls-lockdown-kit/quests'],
+      expect(proxy.getCallsFor({ path: '/repo/.ls-pokayoke/quests' })).toStrictEqual([
+        ['/repo/.ls-pokayoke/quests'],
       ]);
     });
   });

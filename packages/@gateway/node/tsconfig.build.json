@@ -1,7 +1,7 @@
 {
   "extends": [
     "./tsconfig.json",
-    "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.gateway.build"
+    "@legendscribe/pokayoke/eslint-plugin/tsconfig.gateway.build"
   ],
   "compilerOptions": {
     "rootDir": "./src",

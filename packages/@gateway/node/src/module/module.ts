@@ -10,7 +10,7 @@
  *
  * USAGE:
  * import { createRequire, resolvePackageRoot } from '#gateway/node/module';
- * resolvePackageRoot({ specifier: '@legendscribe/lockdown-kit-shared/contracts' });
+ * resolvePackageRoot({ specifier: '@legendscribe/pokayoke/shared/contracts' });
  */
 
 export { createRequire, builtinModules } from 'module';

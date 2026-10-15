@@ -1,13 +1,51 @@
 {
-  "env": {
-    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
-  },
-  "crossSessionInbound": "refuse",
-  "promptCacheTtl": "1h",
-  "subagentPromptCacheTtl": "1h",
-  "promptSuggestionEnabled": false,
   "hooks": {
     "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-pre-edit-lint"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-pre-bash"
+          }
+        ]
+      },
+      {
+        "matcher": "Grep|Glob|Search|Find",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-pre-search"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-pre-folder-detail"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__pokayoke__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-pre-mcp-caller"
+          }
+        ]
+      },
       {
         "matcher": "Bash|Read",
         "hooks": [
@@ -25,51 +63,6 @@
             "command": "brutalpit-pre-mcp-caller"
           }
         ]
-      },
-      {
-        "matcher": "Write|Edit|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "lockdown-kit-pre-edit-lint"
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "lockdown-kit-pre-bash"
-          }
-        ]
-      },
-      {
-        "matcher": "Grep|Glob|Search|Find",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "lockdown-kit-pre-search"
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "lockdown-kit-pre-folder-detail"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__lockdown-kit__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "lockdown-kit-pre-mcp-caller"
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -78,7 +71,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-post-bash",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-post-bash",
             "timeout": 300
           }
         ]
@@ -89,7 +82,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet discover"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet discover"
           }
         ]
       },
@@ -97,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet searchStrategy"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet searchStrategy"
           }
         ]
       },
@@ -105,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet reportingFindings"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet reportingFindings"
           }
         ]
       },
@@ -113,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet folderTypes"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet folderTypes"
           }
         ]
       },
@@ -121,7 +114,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet modifyingCodeGuidance"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet modifyingCodeGuidance"
           }
         ]
       },
@@ -129,7 +122,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet ward"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet ward"
           }
         ]
       },
@@ -137,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet wardDiscipline"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet wardDiscipline"
           }
         ]
       },
@@ -145,7 +138,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet packages"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet packages"
           }
         ]
       },
@@ -153,7 +146,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet backgroundTasks"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet backgroundTasks"
           }
         ]
       },
@@ -161,7 +154,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet commentDiscipline"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet commentDiscipline"
           }
         ]
       },
@@ -169,7 +162,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet buildDiscipline"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet buildDiscipline"
           }
         ]
       },
@@ -177,7 +170,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet worktrees"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet worktrees"
           }
         ]
       },
@@ -185,7 +178,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet generatedConfig"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet generatedConfig"
           }
         ]
       },
@@ -193,7 +186,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet siegelense"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet siegelense"
           }
         ]
       },
@@ -201,7 +194,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet consumerGatewayWrapper"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet consumerGatewayWrapper"
           }
         ]
       },
@@ -209,7 +202,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet decisionMaking"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet decisionMaking"
           }
         ]
       }
@@ -219,7 +212,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet discover"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet discover"
           }
         ]
       },
@@ -227,7 +220,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet searchStrategy"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet searchStrategy"
           }
         ]
       },
@@ -235,7 +228,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet reportingFindings"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet reportingFindings"
           }
         ]
       },
@@ -243,7 +236,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet folderTypes"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet folderTypes"
           }
         ]
       },
@@ -251,7 +244,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet modifyingCodeGuidance"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet modifyingCodeGuidance"
           }
         ]
       },
@@ -259,7 +252,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet ward"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet ward"
           }
         ]
       },
@@ -267,7 +260,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet wardDiscipline"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet wardDiscipline"
           }
         ]
       },
@@ -275,7 +268,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet packages"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet packages"
           }
         ]
       },
@@ -283,7 +276,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet backgroundTasks"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet backgroundTasks"
           }
         ]
       },
@@ -291,7 +284,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet commentDiscipline"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet commentDiscipline"
           }
         ]
       },
@@ -299,7 +292,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet buildDiscipline"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet buildDiscipline"
           }
         ]
       },
@@ -307,7 +300,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet worktrees"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet worktrees"
           }
         ]
       },
@@ -315,7 +308,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet generatedConfig"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet generatedConfig"
           }
         ]
       },
@@ -323,7 +316,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet siegelense"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet siegelense"
           }
         ]
       },
@@ -331,7 +324,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet consumerGatewayWrapper"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet consumerGatewayWrapper"
           }
         ]
       },
@@ -339,7 +332,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-session-snippet decisionMaking"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-session-snippet decisionMaking"
           }
         ]
       }
@@ -349,7 +342,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "lockdown-kit-worktree-create"
+            "command": "\"$CLAUDE_PROJECT_DIR\"/node_modules/.bin/pokayoke-worktree-create"
           }
         ]
       }
@@ -376,13 +369,6 @@
       "Bash(lsof:*)",
       "Bash(ps:*)",
       "Bash(python3:*)",
-      "mcp__lockdown-kit__discover",
-      "mcp__lockdown-kit__get-architecture",
-      "mcp__lockdown-kit__get-folder-detail",
-      "mcp__lockdown-kit__get-testing-patterns",
-      "mcp__lockdown-kit__get-project-map",
-      "mcp__lockdown-kit__get-project-inventory",
-      "mcp__lockdown-kit__create-worktree",
       "Bash(lockdown-kit siegelense:*)",
       "mcp__brutalpit__get-quest",
       "mcp__brutalpit__modify-quest",
@@ -399,7 +385,22 @@
       "mcp__brutalpit__get-quest-summary",
       "mcp__brutalpit__quest-work",
       "mcp__brutalpit__get-quest-work",
-      "mcp__brutalpit__get-quest-health"
+      "mcp__brutalpit__get-quest-health",
+      "mcp__pokayoke__discover",
+      "mcp__pokayoke__get-architecture",
+      "mcp__pokayoke__get-folder-detail",
+      "mcp__pokayoke__get-testing-patterns",
+      "mcp__pokayoke__get-project-map",
+      "mcp__pokayoke__get-project-inventory",
+      "mcp__pokayoke__create-worktree",
+      "Bash(pokayoke siegelense:*)"
     ]
-  }
+  },
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "crossSessionInbound": "refuse",
+  "promptCacheTtl": "1h",
+  "subagentPromptCacheTtl": "1h",
+  "promptSuggestionEnabled": false
 }

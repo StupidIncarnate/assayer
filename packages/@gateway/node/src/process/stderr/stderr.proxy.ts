@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 // write returns nothing a caller branches on, so there is no argument to key on: the fake
 // records every chunk in call order (nothing reaches the real stream) and the read-backs hand

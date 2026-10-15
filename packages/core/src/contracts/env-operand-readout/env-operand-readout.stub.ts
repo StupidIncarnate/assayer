@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { envOperandReadoutContract } from './env-operand-readout-contract';
 import type { EnvOperandReadout } from './env-operand-readout-contract';

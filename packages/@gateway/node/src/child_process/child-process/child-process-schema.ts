@@ -12,4 +12,4 @@
 import { z } from 'zod';
 import { ChildProcess } from 'child_process';
 
-export const childProcessSchema = z.instanceof(ChildProcess).brand<'#GatewayChildProcess'>();
+export const childProcessSchema = z.instanceof(ChildProcess);

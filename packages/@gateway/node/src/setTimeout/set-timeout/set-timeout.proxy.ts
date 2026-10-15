@@ -1,5 +1,5 @@
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/pokayoke/testing/register-mock';
 
 import { TimeoutStub } from '../timeout/timeout.stub';
 

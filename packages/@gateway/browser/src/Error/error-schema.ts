@@ -7,4 +7,4 @@
  */
 import { z } from 'zod';
 
-export const errorSchema = z.instanceof(Error).brand<'#GatewayError'>();
+export const errorSchema = z.instanceof(Error);

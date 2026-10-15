@@ -7,12 +7,12 @@ describe('stat', () => {
     it('VALID: {path: a regular file} => returns kind file with size and mtime', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.lockdown-kit.json',
+        path: '/repo/.pokayoke.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/repo/.lockdown-kit.json');
+      const result = await stat('/repo/.pokayoke.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -25,12 +25,12 @@ describe('stat', () => {
     it('VALID: {path: a directory} => returns kind directory', async () => {
       const proxy = statProxy();
       proxy.returnsDirectory({
-        path: '/repo/.ls-lockdown-kit',
+        path: '/repo/.ls-pokayoke',
         sizeBytes: 4096,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/repo/.ls-lockdown-kit');
+      const result = await stat('/repo/.ls-pokayoke');
 
       expect(result).toStrictEqual({
         kind: 'directory',
@@ -61,12 +61,12 @@ describe('stat', () => {
     it('EDGE: {path: mtimeMs with sub-millisecond precision} => floors it to an integer', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.lockdown-kit.json',
+        path: '/repo/.pokayoke.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000.75,
       });
 
-      const result = await stat('/repo/.lockdown-kit.json');
+      const result = await stat('/repo/.pokayoke.json');
 
       expect(result.modifiedAtMs).toBe(1700000000000);
     });
@@ -74,13 +74,13 @@ describe('stat', () => {
     it('VALID: {path, createdAtMs staged distinct from modifiedAtMs} => returns its own birth time', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.lockdown-kit.json',
+        path: '/repo/.pokayoke.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
         createdAtMs: 1600000000000,
       });
 
-      const result = await stat('/repo/.lockdown-kit.json');
+      const result = await stat('/repo/.pokayoke.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -115,13 +115,13 @@ describe('stat', () => {
     it('VALID: {returnsMatchingPath, a predicate} => resolves for a path the predicate accepts', async () => {
       const proxy = statProxy();
       proxy.returnsMatchingPath({
-        path: (value) => String(value).endsWith('.lockdown-kit.json'),
+        path: (value) => String(value).endsWith('.pokayoke.json'),
         kind: 'file',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      const result = await stat('/resolved/at/runtime/.lockdown-kit.json');
+      const result = await stat('/resolved/at/runtime/.pokayoke.json');
 
       expect(result).toStrictEqual({
         kind: 'file',
@@ -147,15 +147,15 @@ describe('stat', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = statProxy();
       proxy.returnsFile({
-        path: '/repo/.lockdown-kit.json',
+        path: '/repo/.pokayoke.json',
         sizeBytes: 128,
         modifiedAtMs: 1700000000000,
       });
 
-      await stat('/repo/.lockdown-kit.json');
+      await stat('/repo/.pokayoke.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
-        ['/repo/.lockdown-kit.json'],
+      expect(proxy.getCallsFor({ path: '/repo/.pokayoke.json' })).toStrictEqual([
+        ['/repo/.pokayoke.json'],
       ]);
     });
   });

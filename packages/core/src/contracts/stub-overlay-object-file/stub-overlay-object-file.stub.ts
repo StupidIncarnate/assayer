@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { stubOverlayObjectFileContract } from './stub-overlay-object-file-contract';
 import type { StubOverlayObjectFile } from './stub-overlay-object-file-contract';

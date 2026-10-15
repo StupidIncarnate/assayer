@@ -5,7 +5,7 @@
  * still rejects — "disk unreadable" and "disk full" are different problems for a caller.
  *
  * USAGE:
- * await diskFreeBytes('/home/user/.ls-lockdown-kit');
+ * await diskFreeBytes('/home/user/.ls-pokayoke');
  * // Returns free space in bytes, or null if fs.statfs is unavailable on this runtime
  */
 

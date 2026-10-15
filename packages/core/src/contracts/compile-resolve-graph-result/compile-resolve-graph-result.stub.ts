@@ -5,7 +5,7 @@
  * CompileResolveGraphResultStub();
  * // Returns a valid CompileResolveGraphResult
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 import { ResolvedIndexStub } from "@assayer/shared/contracts/resolved-index/resolved-index.stub";
 
 import { compileResolveGraphResultContract } from "./compile-resolve-graph-result-contract";

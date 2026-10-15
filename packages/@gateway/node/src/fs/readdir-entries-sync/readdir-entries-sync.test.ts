@@ -7,7 +7,7 @@ describe('readdirEntriesSync', () => {
   it('VALID: {path: directory with mixed entry kinds} => returns each name paired with its kind', () => {
     const proxy = readdirEntriesSyncProxy();
     proxy.returns({
-      path: '/repo/.ls-lockdown-kit',
+      path: '/repo/.ls-pokayoke',
       entries: [
         { name: 'config.json', kind: 'file' },
         { name: 'quests', kind: 'directory' },
@@ -15,7 +15,7 @@ describe('readdirEntriesSync', () => {
       ],
     });
 
-    expect(readdirEntriesSync('/repo/.ls-lockdown-kit')).toStrictEqual([
+    expect(readdirEntriesSync('/repo/.ls-pokayoke')).toStrictEqual([
       { name: 'config.json', kind: 'file' },
       { name: 'quests', kind: 'directory' },
       { name: 'link', kind: 'symlink' },
@@ -24,9 +24,9 @@ describe('readdirEntriesSync', () => {
 
   it('EMPTY: {path: an empty directory} => returns an empty array', () => {
     const proxy = readdirEntriesSyncProxy();
-    proxy.returns({ path: '/repo/.ls-lockdown-kit', entries: [] });
+    proxy.returns({ path: '/repo/.ls-pokayoke', entries: [] });
 
-    expect(readdirEntriesSync('/repo/.ls-lockdown-kit')).toStrictEqual([]);
+    expect(readdirEntriesSync('/repo/.ls-pokayoke')).toStrictEqual([]);
   });
 
   it('ERROR: {path: missing} => throws the raw ENOENT error', () => {
@@ -47,21 +47,21 @@ describe('readdirEntriesSync', () => {
 
   it('ERROR: {path: a parent segment that is a file} => throws the raw ENOTDIR error', () => {
     const proxy = readdirEntriesSyncProxy();
-    const error = FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' });
-    proxy.throws({ path: '/repo/.lockdown-kit.json/nested', error });
+    const error = FsErrorStub({ code: 'ENOTDIR', path: '/repo/.pokayoke.json/nested' });
+    proxy.throws({ path: '/repo/.pokayoke.json/nested', error });
 
-    expect(() => readdirEntriesSync('/repo/.lockdown-kit.json/nested')).toThrow(error);
+    expect(() => readdirEntriesSync('/repo/.pokayoke.json/nested')).toThrow(error);
   });
 
   describe('tolerant addressing', () => {
     it('VALID: {returnsMatchingPath, a predicate} => returns entries for a path the predicate accepts', () => {
       const proxy = readdirEntriesSyncProxy();
       proxy.returnsMatchingPath({
-        path: (value) => String(value).endsWith('.ls-lockdown-kit'),
+        path: (value) => String(value).endsWith('.ls-pokayoke'),
         entries: [{ name: 'config.json', kind: 'file' }],
       });
 
-      expect(readdirEntriesSync('/resolved/at/runtime/.ls-lockdown-kit')).toStrictEqual([
+      expect(readdirEntriesSync('/resolved/at/runtime/.ls-pokayoke')).toStrictEqual([
         { name: 'config.json', kind: 'file' },
       ]);
     });
@@ -144,12 +144,12 @@ describe('readdirEntriesSync', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', () => {
       const proxy = readdirEntriesSyncProxy();
-      proxy.returns({ path: '/repo/.ls-lockdown-kit', entries: [] });
+      proxy.returns({ path: '/repo/.ls-pokayoke', entries: [] });
 
-      readdirEntriesSync('/repo/.ls-lockdown-kit');
+      readdirEntriesSync('/repo/.ls-pokayoke');
 
-      expect(proxy.getCallsFor({ path: '/repo/.ls-lockdown-kit' })).toStrictEqual([
-        ['/repo/.ls-lockdown-kit', { withFileTypes: true }],
+      expect(proxy.getCallsFor({ path: '/repo/.ls-pokayoke' })).toStrictEqual([
+        ['/repo/.ls-pokayoke', { withFileTypes: true }],
       ]);
     });
   });

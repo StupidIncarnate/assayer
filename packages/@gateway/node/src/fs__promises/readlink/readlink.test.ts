@@ -38,10 +38,10 @@ describe('readlink', () => {
 
     it('ERROR: {path: not a symlink} => rejects with the raw EINVAL error', async () => {
       const proxy = readlinkProxy();
-      proxy.notALink({ path: '/repo/.lockdown-kit.json' });
+      proxy.notALink({ path: '/repo/.pokayoke.json' });
 
-      await expect(readlink('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'EINVAL', path: '/repo/.lockdown-kit.json' }),
+      await expect(readlink('/repo/.pokayoke.json')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'EINVAL', path: '/repo/.pokayoke.json' }),
       );
     });
   });

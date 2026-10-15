@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { CaseResultStub } from '../case-result/case-result.stub';
 import { runResultContract } from './run-result-contract';

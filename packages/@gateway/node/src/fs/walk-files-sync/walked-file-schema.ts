@@ -14,5 +14,4 @@ import type { WalkedFile } from './walked-file';
 import { isWalkedFile } from './is-walked-file';
 
 export const walkedFileSchema = z
-  .custom<WalkedFile>((value) => isWalkedFile(value))
-  .brand<'#GatewayWalkedFile'>();
+  .custom<WalkedFile>((value) => isWalkedFile(value));

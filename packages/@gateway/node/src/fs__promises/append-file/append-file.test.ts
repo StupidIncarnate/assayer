@@ -5,12 +5,12 @@ import { FsErrorStub } from '../../fs/is-fs-error/fs-error.stub';
 describe('appendFile', () => {
   it('VALID: {path, contents} => appends the contents and resolves', async () => {
     const proxy = appendFileProxy();
-    proxy.succeeds({ path: '/repo/.ls-lockdown-kit/event-outbox.jsonl' });
+    proxy.succeeds({ path: '/repo/.ls-pokayoke/event-outbox.jsonl' });
 
     await expect(
-      appendFile('/repo/.ls-lockdown-kit/event-outbox.jsonl', '{"type":"quest-modified"}\n'),
+      appendFile('/repo/.ls-pokayoke/event-outbox.jsonl', '{"type":"quest-modified"}\n'),
     ).resolves.toBe(undefined);
-    expect(proxy.appendedContentsFor({ path: '/repo/.ls-lockdown-kit/event-outbox.jsonl' })).toBe(
+    expect(proxy.appendedContentsFor({ path: '/repo/.ls-pokayoke/event-outbox.jsonl' })).toBe(
       '{"type":"quest-modified"}\n',
     );
   });
@@ -33,10 +33,10 @@ describe('appendFile', () => {
 
   it('ERROR: {path is a directory} => rejects with the raw EISDIR error', async () => {
     const proxy = appendFileProxy();
-    const error = FsErrorStub({ code: 'EISDIR', path: '/repo/.ls-lockdown-kit' });
-    proxy.rejects({ path: '/repo/.ls-lockdown-kit', error });
+    const error = FsErrorStub({ code: 'EISDIR', path: '/repo/.ls-pokayoke' });
+    proxy.rejects({ path: '/repo/.ls-pokayoke', error });
 
-    await expect(appendFile('/repo/.ls-lockdown-kit', '{}\n')).rejects.toBe(error);
+    await expect(appendFile('/repo/.ls-pokayoke', '{}\n')).rejects.toBe(error);
   });
 
   it('VALID: {succeedsMatchingPath with an outbox suffix} => appends to any matching path and reads it back', async () => {
@@ -77,14 +77,14 @@ describe('appendFile', () => {
 
   it('VALID: {two appends to the same path} => getCallsFor reads back each call in order', async () => {
     const proxy = appendFileProxy();
-    proxy.succeeds({ path: '/repo/.ls-lockdown-kit/event-outbox.jsonl' });
+    proxy.succeeds({ path: '/repo/.ls-pokayoke/event-outbox.jsonl' });
 
-    await appendFile('/repo/.ls-lockdown-kit/event-outbox.jsonl', 'first\n');
-    await appendFile('/repo/.ls-lockdown-kit/event-outbox.jsonl', 'second\n');
+    await appendFile('/repo/.ls-pokayoke/event-outbox.jsonl', 'first\n');
+    await appendFile('/repo/.ls-pokayoke/event-outbox.jsonl', 'second\n');
 
-    expect(proxy.getCallsFor({ path: '/repo/.ls-lockdown-kit/event-outbox.jsonl' })).toStrictEqual([
-      ['/repo/.ls-lockdown-kit/event-outbox.jsonl', 'first\n', 'utf8'],
-      ['/repo/.ls-lockdown-kit/event-outbox.jsonl', 'second\n', 'utf8'],
+    expect(proxy.getCallsFor({ path: '/repo/.ls-pokayoke/event-outbox.jsonl' })).toStrictEqual([
+      ['/repo/.ls-pokayoke/event-outbox.jsonl', 'first\n', 'utf8'],
+      ['/repo/.ls-pokayoke/event-outbox.jsonl', 'second\n', 'utf8'],
     ]);
   });
 });

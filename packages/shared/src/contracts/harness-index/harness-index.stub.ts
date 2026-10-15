@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { harnessIndexContract } from './harness-index-contract';
 import type { HarnessIndex } from './harness-index-contract';

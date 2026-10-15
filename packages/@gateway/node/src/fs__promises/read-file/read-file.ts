@@ -5,7 +5,7 @@
  * file is an ordinary answer, not a fault.
  *
  * USAGE:
- * await readFile('/repo/.lockdown-kit.json');
+ * await readFile('/repo/.pokayoke.json');
  * // Returns the file's contents as a string; rejects with the raw NodeJS.ErrnoException on ENOENT
  */
 

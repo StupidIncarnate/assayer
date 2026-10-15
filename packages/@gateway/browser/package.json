@@ -46,7 +46,7 @@
     "prepack": "node ../../../scripts/build-workspaces.mjs --tsc-only",
     "build": "tsc -p tsconfig.build.json",
     "build:clean": "rm -rf dist .ward/build.tsbuildinfo && npm run build",
-    "ward": "lockdown-kit-ward"
+    "ward": "pokayoke-ward"
   },
   "dependencies": {
     "@assayer/node": "*"

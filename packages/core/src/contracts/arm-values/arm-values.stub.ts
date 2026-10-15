@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { armValuesContract } from './arm-values-contract';
 import type { ArmValues } from './arm-values-contract';

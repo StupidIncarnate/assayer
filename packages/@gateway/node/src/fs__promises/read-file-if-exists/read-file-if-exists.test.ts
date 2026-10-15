@@ -6,18 +6,18 @@ describe('readFileIfExists', () => {
   describe('successful reads', () => {
     it('VALID: {path: existing file} => returns its contents', async () => {
       const proxy = readFileIfExistsProxy();
-      proxy.returns({ path: '/repo/.lockdown-kit.json', contents: '{"port":3737}' });
+      proxy.returns({ path: '/repo/.pokayoke.json', contents: '{"port":3737}' });
 
-      const result = await readFileIfExists('/repo/.lockdown-kit.json');
+      const result = await readFileIfExists('/repo/.pokayoke.json');
 
       expect(result).toBe('{"port":3737}');
     });
 
     it('EMPTY: {path: an empty file} => returns an empty string, distinct from null', async () => {
       const proxy = readFileIfExistsProxy();
-      proxy.returns({ path: '/repo/.lockdown-kit.json', contents: '' });
+      proxy.returns({ path: '/repo/.pokayoke.json', contents: '' });
 
-      const result = await readFileIfExists('/repo/.lockdown-kit.json');
+      const result = await readFileIfExists('/repo/.pokayoke.json');
 
       expect(result).toBe('');
     });
@@ -55,10 +55,10 @@ describe('readFileIfExists', () => {
 
     it('ERROR: {path: a parent segment that is a file} => rejects with the raw ENOTDIR error', async () => {
       const proxy = readFileIfExistsProxy();
-      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
+      proxy.notADirectory({ path: '/repo/.pokayoke.json/nested' });
 
-      await expect(readFileIfExists('/repo/.lockdown-kit.json/nested')).rejects.toStrictEqual(
-        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.lockdown-kit.json/nested' }),
+      await expect(readFileIfExists('/repo/.pokayoke.json/nested')).rejects.toStrictEqual(
+        FsErrorStub({ code: 'ENOTDIR', path: '/repo/.pokayoke.json/nested' }),
       );
     });
   });
@@ -93,12 +93,12 @@ describe('readFileIfExists', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readFileIfExistsProxy();
-      proxy.returns({ path: '/repo/.lockdown-kit.json', contents: '{"port":3737}' });
+      proxy.returns({ path: '/repo/.pokayoke.json', contents: '{"port":3737}' });
 
-      await readFileIfExists('/repo/.lockdown-kit.json');
+      await readFileIfExists('/repo/.pokayoke.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
-        ['/repo/.lockdown-kit.json', 'utf8'],
+      expect(proxy.getCallsFor({ path: '/repo/.pokayoke.json' })).toStrictEqual([
+        ['/repo/.pokayoke.json', 'utf8'],
       ]);
     });
   });

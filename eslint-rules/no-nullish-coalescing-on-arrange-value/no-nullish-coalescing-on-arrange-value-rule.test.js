@@ -193,3 +193,22 @@ const value = a ?? b;
     },
   ],
 });
+
+// Tool config files such as `playwright.config.ts` are linted with `projectService: false`, so
+// typescript-eslint hands the rule a null `program`. The rule must stay silent there, not crash.
+const untypedRuleTester = new RuleTester({
+  languageOptions: { parserOptions: { projectService: false } },
+});
+
+untypedRuleTester.run('no-nullish-coalescing-on-arrange-value (untyped parse)', rule, {
+  valid: [
+    {
+      name: 'VALID: ?? in a file parsed without type information',
+      code: `
+declare const workers: number | undefined;
+export const config = { workers: workers ?? 1 };
+`,
+    },
+  ],
+  invalid: [],
+});

@@ -11,7 +11,7 @@
  *   command: 'npm',
  *   args: ['run', 'dev:no-watch', '--workspace=@legendscribe/brutalpit-server'],
  *   cwd: '/repo',
- *   env: { LOCKDOWN_KIT_PORT: '34172' },
+ *   env: { POKAYOKE_PORT: '34172' },
  *   stdoutFd: 12,
  *   stderrFd: 12,
  * });

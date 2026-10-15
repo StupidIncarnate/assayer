@@ -11,7 +11,7 @@ describe('readNearestTsconfig against the real disk', () => {
 
     expect([result?.configFilePath, result?.options.typeRoots]).toStrictEqual([
       `${PACKAGE_ROOT}/tsconfig.json`,
-      [`${REPO_ROOT}/node_modules/@types`],
+      [`${REPO_ROOT}/node_modules/@types`, `${REPO_ROOT}/@types`],
     ]);
   });
 });

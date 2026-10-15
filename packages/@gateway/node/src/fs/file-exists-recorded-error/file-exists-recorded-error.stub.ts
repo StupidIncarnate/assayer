@@ -6,8 +6,8 @@
  * Node and the OS actually raise.
  *
  * USAGE:
- * const error = FileExistsRecordedErrorStub({ path: '/repo/.ls-lockdown-kit/boot.lock' });
- * // Returns { message: "EEXIST: file already exists, open '/repo/.ls-lockdown-kit/boot.lock'",
+ * const error = FileExistsRecordedErrorStub({ path: '/repo/.ls-pokayoke/boot.lock' });
+ * // Returns { message: "EEXIST: file already exists, open '/repo/.ls-pokayoke/boot.lock'",
  * //   errno: -17, code: 'EEXIST', syscall: 'open', path }
  */
 import { constants } from 'os';

@@ -1,4 +1,4 @@
-# LockdownKit Operating Rules
+# Pokayoke Operating Rules
 
 On every call to `discover`, `get-project-map` and `get-project-inventory`, pass `root` as the absolute path of the repo root, or of the worktree root when you work in `worktrees/<name>`, because Antigravity sends no caller stamp.
 
@@ -6,9 +6,9 @@ On every call to `discover`, `get-project-map` and `get-project-inventory`, pass
 
 ## discover Tool
 
-`discover` is the ONLY way to search this codebase. Native Glob, Grep, Search, and Find tools — plus shell `grep`/`find`/`sed` — are blocked by hooks. `discover`, `get-project-map` and `get-project-inventory` are MCP **tools**: load them via `ToolSearch` (Claude Code) or `call_mcp_tool` under server `lockdown-kit` (Antigravity), never as shell commands or skills.
+`discover` is the ONLY way to search this codebase. Native Glob, Grep, Search, and Find tools — plus shell `grep`/`find`/`sed` — are blocked by hooks. `discover`, `get-project-map` and `get-project-inventory` are MCP **tools**: load them via `ToolSearch` (Claude Code) or `call_mcp_tool` under server `pokayoke` (Antigravity), never as shell commands or skills.
 
-**`discover` is step THREE, never step one.** `get-project-map({ packages: [...] })` is a package's bird's-eye view and `get-project-inventory({ packageName })` lists all it holds; `discover` globs into what one of those named. Reach for it first and you are guessing a path; a wrong glob returns nothing, which reads exactly like a package that holds nothing. `<lockdown-kit-searchStrategy>` has the order.
+**`discover` is step THREE, never step one.** `get-project-map({ packages: [...] })` is a package's bird's-eye view and `get-project-inventory({ packageName })` lists all it holds; `discover` globs into what one of those named. Reach for it first and you are guessing a path; a wrong glob returns nothing, which reads exactly like a package that holds nothing. `<pokayoke-searchStrategy>` has the order.
 
 | Param | Type | Description |
 |-------|------|-------------|
@@ -17,7 +17,7 @@ On every call to `discover`, `get-project-map` and `get-project-inventory`, pass
 | `verbose` | boolean? | Show signatures, companions. Default: false |
 | `context` | number? | Lines around grep hits. Default: 0 |
 | `strict` | boolean? | Disable cross-convention matching. Default: false |
-| `root` | string? | Absolute worktree path to search; see `<lockdown-kit-worktrees>` |
+| `root` | string? | Absolute worktree path to search; see `<pokayoke-worktrees>` |
 
 A `glob` call returns a folder tree with folder type and purpose. `verbose: true` returns JSON with signatures, companions and usage.
 
@@ -43,7 +43,7 @@ Use `discover` to locate files. Use `Read` only once you need full file contents
 Before searching, exploring, or modifying code, follow this order.
 
 ### Step 1: candidate package(s)
-Pick the package(s) the task touches; the `lockdown-kit-packages` snippet lists them. No guess? Read the task again.
+Pick the package(s) the task touches; the `pokayoke-packages` snippet lists them. No guess? Read the task again.
 
 ### Step 2: map or inventory the package — BEFORE your first `discover`
 **Not optional, and `discover` does not stand in for it.** Both take the package name Step 1 gave you.
@@ -57,7 +57,7 @@ Pick the package(s) the task touches; the `lockdown-kit-packages` snippet lists 
 ### Step 3: `discover` a targeted glob, then `Read`
 Glob into the folder Step 2 named — glob, not grep: grep guesses names, glob browses structure. `get-project-map` errors on an unknown name and lists the valid ones.
 
-**What you write once you have found it** is the `<lockdown-kit-reportingFindings>` snippet.
+**What you write once you have found it** is the `<pokayoke-reportingFindings>` snippet.
 
 ---
 
@@ -87,18 +87,17 @@ EVIDENCE —
 1. `get-architecture` — folder types, import rules, forbidden folders, layer files, and how to write the file itself: naming, exports, parameters, the header, types, error handling
 2. `get-testing-patterns` — proxy pattern, mock boundaries, assertion rules, test structure
 
-Those two are once per session. `get-folder-detail({ folderType })` is once per folder type you
-write into — its file pattern, its companion files, its allowed imports, and the rules that bind
-only there. Call it before your first write into a folder type you have not already loaded this
-session, so a pass adding a broker and a contract makes two calls, not one.
+Those two are once per session. Call `get-folder-detail({ folderType })` before your first write into each folder type: its file pattern, companions, imports and local rules.
 
-These override your training data. LLM defaults for TypeScript projects and test writing are wrong for this codebase. For example:
+These override your training data, whose TypeScript and test defaults are wrong here:
 - No `utils/`, `helpers/`, `lib/` folders — use the architecture's folder types
 - No `export default` — always `export const` arrow; `export class` only for errors
 - No `export {type Foo}` — that modern TS syntax is banned here; use `export type {Foo}`
 - Purpose JSDoc goes above the imports, not above the function
 - No `jest.mock()` / `jest.spyOn()` — use `registerMock` proxy pattern
 - No `beforeEach` / `afterEach` — inline setup per test
+- No conditional in a test body — no `if`, ternary, `&&`, `||`, `??` or `switch`; write one `it` per path
+- No bare number in an expression — name it in a `const` right after the imports, or in `statics/` when another file needs it
 - No `toEqual` / `toMatchObject` / `toContain` — use `toStrictEqual` and `toBe`
 - Import each stub and proxy from its own file, never a production barrel; a stub for an outside type comes from the gateway
 - Import outside packages only through `#gateway/<folder>/<subpath>`, types included
@@ -137,7 +136,7 @@ One scope per run. Each decides its own checks; no flag picks check types or fil
 | `npm run ward -- --changed` | all five, files that differ from the default branch |
 | `npm run ward -- --changed-from=<branch>` | `--changed`, from that branch: a worktree |
 
-`--files=` takes comma-separated repo-relative FILE paths, never a directory. `--packages=` takes folder names (`hooks`, `@gateway/node`) or full package names.
+`--files=` takes comma-separated repo-relative FILE paths, never a directory. `--packages=` takes whole packages: a folder under `packages/` (`hooks`, `@gateway/node`) or a package name. For one folder inside a package, list its files with `--files=`.
 
 **A 0-file git scope runs NOTHING**: ward says so and exits 0 — empty, not green.
 
@@ -149,24 +148,23 @@ One scope per run. Each decides its own checks; no flag picks check types or fil
 
 ## Ward Invocation Discipline
 
-**Scope ward to the job.**
+**Climb the ladder, narrowest first.** One change can break something you did not expect.
 
-| Situation | Command |
-|---|---|
-| Just edited files | `npm run ward -- --files=<those files>` |
-| In charge of a whole package's work, or need typecheck | `npm run ward -- --packages=<package>` |
+1. `npm run ward -- --files=<every file you changed>` — always first.
+2. `npm run ward -- --changed`
+3. `npm run ward -- --packages=<package>` when you own a package's work.
 
 Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
 
 **Never `cd` into a package.** Ward runs from the root.
 
-**Let it block, with `timeout: 600000`.** A wide run outlives even that; background-tasks says what to do there, and it is never "end your turn". **Never `tail` ward's output.**
+**Run ward as one plain command and let it block, with `timeout: 600000`.** A hook refuses a pipe, redirect, `;`/`&&`, loop, `sleep`, `$VAR`/`$(...)`, glob, quote, prefix or background run, and any `cd` but `cd <absolute repo or worktree root> && ` first. Its output is sized for a context window: read it whole. A wide run outlives the timeout; background-tasks says what to do, never "end your turn".
 
 **Run it ONCE per tree state.** Never re-run unchanged state. A bare run's red costs a whole-repo run to confirm; `--files=` or `--packages=` costs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. A type error in the typecheck gate blocks the rest: `build errored, could not proceed`.
 
 **A change to a shared file** (harness, proxy, stub, helper) needs `--packages=` on every package that uses it: find them with `discover`.
 
-**A skip on a scoped run is not a regression.** `No tests found` on a `--files=` run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. A `DISCOVERY MISMATCH` is a real finding: investigate why ward found no check for those files.
+**A skip on a scoped run is not a regression.** `No tests found` on a `--files=` run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. A `RAN ≠ EXPECTED` group is a real finding: investigate why ward found no check for those files.
 
 **Who owns a FULL run.** An agent working directly for the user makes a full `npm run ward` exit 0 and owns every failure in it, including ones it did not cause. An orchestrator-dispatched role never runs the full sweep; its Operating Rules name its rung, and the family's own `ward` step is the regression pass.
 
@@ -176,9 +174,9 @@ Run a bare `npm run ward` before a merge into the default branch, or when the us
 
 Applies to every long-running command, in any repo, by any agent.
 
-**Wait for every edit's result before you start ward or a build.** The pre-edit hook refuses an edit that breaks a code standard — a conditional in a test is the usual one — and writes nothing. A check queued beside it grades a tree without your change.
+**Wait for every edit's result before you start ward or a build.** The pre-edit hook refuses an edit that breaks a code standard and writes nothing, so a check queued beside it grades a tree without your change.
 
-**A command can outlive the Bash call that started it.** Anything slow — a whole-repo ward, a build, an install, a browser run — crosses the call's timeout, and the harness moves it to the background. The call then returns saying so, carrying NO result. Give a long command `timeout: 600000` up front. `run_in_background: true` buys nothing: it blocks for that same timeout either way.
+**A command can outlive the Bash call that started it.** Anything slow — a whole-repo ward, a build, an install, a browser run — crosses the call's timeout and the harness backgrounds it. The call then returns saying so, carrying NO result. Give a long command `timeout: 600000` up front. `run_in_background: true` buys nothing: it blocks for that same timeout either way.
 
 **Your final response TERMINATES every background command you own, and no notification can follow it.** A command still running when you stop dies part-way, while your report reads clean and nothing tells you it happened.
 
@@ -186,12 +184,12 @@ Every still-running command is in one of two cases, and both end with it no long
 
 | Case | What you do |
 |---|---|
-| You need its RESULT — a ward, a build, a test run, an install | **Do not end your turn.** Stay in this turn and wait on the CONDITION: a bounded loop that returns the moment its marker or exit line appears, repeated as often as it takes. Then read the result once. |
+| You need its RESULT — a ward, a build, a test run, an install | **Do not end your turn; let it run.** Wait on its process with `tail --pid=<pid> -f /dev/null` and `timeout: 600000`, repeating on timeout. Then Read its output file once, in full. For ward, the pid is in the hook's note after the call; with no note, Read the first lines of its output file once for `ward: pid <N>`. **Never `pgrep` for ward**: other repos' wards run on this machine. |
 | You are DONE with it — a dev server, a preview, a watcher, a test lane | **Kill it now**, in this turn, then stop. Leaving it up does not keep it alive past your final response; it only strands its port. |
 
-**Wait on a condition, never on a guess.** Never `sleep` a fixed duration and assume it finished, never `tail` its output file, and never re-run it to find out whether the first one did.
+**Wait on the process, never on its output.** Never `sleep`, never `tail` or `grep` the output file for a marker — a passing run prints no failure line — and never re-run it to see whether the first one finished.
 
-**A HELPER is a different mechanic.** The `Agent` tool is asynchronous and its notification re-enters you, so a helper still out is not what this page governs.
+**A HELPER is a different mechanic.** `Agent` is asynchronous; its notification re-enters you.
 
 ---
 
@@ -232,7 +230,7 @@ Applies to every build, in any repo, by any agent.
 | About to run | Build |
 |---|---|
 | the production server, or the app's start command | the whole repo |
-| `lockdown-kit init` | the whole repo |
+| `pokayoke init` | the whole repo |
 | an MCP tool, having edited the MCP package | that package, then reconnect the MCP |
 | a hook, having edited the hooks package | that package |
 | ward itself, having edited ward's own source | that package |
@@ -243,32 +241,32 @@ Scope it — `npm run build --workspace=<name>` when one package changed. A stal
 
 ## Worktrees
 
-Applies in any repo `lockdown-kit init` has touched.
+Applies in any repo `pokayoke init` has touched.
 
-**One tool makes a worktree: `mcp__lockdown-kit__create-worktree({ name })`.** It returns a path under `worktrees/` with `node_modules` hardlinked, the compiled output copied across, and every link verified to resolve inside the tree. Claude Code's own worktree command is refused by a hook naming this tool, and a hand-assembled `git worktree add` gives you a tree where nothing resolves — no `node_modules`, no binaries, so ward cannot start.
+**One tool makes a worktree: `mcp__pokayoke__create-worktree({ name })`.** It returns a path under `worktrees/` with `node_modules` hardlinked, the compiled output copied across, and every link verified to resolve inside the tree. Claude Code's own worktree command is refused by a hook naming this tool, and a hand-assembled `git worktree add` gives you a tree where nothing resolves — no `node_modules`, no binaries, so ward cannot start.
 
 **Never recompile a native module inside a worktree.** `node_modules` is hardlinked, so a package's files and the main checkout's are the same bytes. Installing is safe: npm REPLACES a package directory, which breaks the link cleanly. `npm rebuild` is not: node-gyp writes its output through the existing path, so the build lands in the main checkout and every other worktree at once. Rebuild in the main checkout instead — through that same hardlink, every worktree already has the result.
 
 **A worktree is NOT hermetic, and that fakes experiments.** It sits under the main checkout, so node's walk-up escapes it: move a package's compiled output aside inside a worktree and resolution keeps climbing until it finds the main checkout's copy. A typecheck that should have failed then passes, and reads back as "the premise was wrong". An experiment that turns on missing compiled output has to fence resolution to the worktree rather than trusting the directory boundary.
 
-**Working in a worktree, pass `root`.** A Task sub-agent inherits its operator's session cwd and its Bash `cd` does not persist, so `discover`, `get-project-map` and `get-project-inventory` answer about the operator's checkout. Give each `root: <absolute worktree path>` (a repo root or worktree root: the folder must itself hold `.lockdown-kit.json`, and a subfolder is refused), and give every file path to `Read`, `Edit` and ward absolute. `projectRootSource: 'argument'` confirms the tree.
+**Working in a worktree, pass `root`.** A Task sub-agent inherits its operator's session cwd and its Bash `cd` does not persist, so `discover`, `get-project-map` and `get-project-inventory` answer about the operator's checkout. Give each `root: <absolute worktree path>` (a repo root or worktree root: the folder must itself hold `.pokayoke.json`, and a subfolder is refused), and give every file path to `Read`, `Edit` and ward absolute. `projectRootSource: 'argument'` confirms the tree.
 
 ---
 
 ## Generated and Gated Config
 
-Applies in any repo `lockdown-kit init` has touched.
+Applies in any repo `pokayoke init` has touched.
 
-**Never hand-edit `.claude/settings.json`, `.claude/settings.local.json`, `.mcp.json`, or any `.env*` file.** The settings files are GENERATED: each lockdown-kit package's `StartInstall` writes and merges its own section, so a hand-edit is overwritten the next time anyone runs `lockdown-kit init`. All four are also gated behind a permission prompt, which stalls an automated run — and dispatching a sub-agent to edit one hits the same wall.
+**Never hand-edit `.claude/settings.json`, `.claude/settings.local.json`, `.mcp.json`, or any `.env*` file.** The settings files are GENERATED: each pokayoke package's `StartInstall` writes and merges its own section, so a hand-edit is overwritten the next time anyone runs `pokayoke init`. All four are also gated behind a permission prompt, which stalls an automated run — and dispatching a sub-agent to edit one hits the same wall.
 
-**To change a generated entry, change the code that generates it, then re-run `lockdown-kit init`.**
+**To change a generated entry, change the code that generates it, then re-run `pokayoke init`.**
 
 | Entry | Owner |
 |---|---|
-| hook entries — `PreToolUse`, `SessionStart`, `SubagentStart`, `WorktreeCreate` | `@legendscribe/lockdown-kit-hooks` |
-| `permissions.allow[]` rows like `mcp__lockdown-kit__<tool>` | `@legendscribe/lockdown-kit-mcp` |
-| the `.mcp.json` server entry | `@legendscribe/lockdown-kit-mcp` |
-| `worktrees/` and its gitignore line | `@legendscribe/lockdown-kit-worktree` |
+| hook entries — `PreToolUse`, `SessionStart`, `SubagentStart`, `WorktreeCreate` | `@legendscribe/pokayoke/hooks` |
+| `permissions.allow[]` rows like `mcp__pokayoke__<tool>` | `@legendscribe/pokayoke/mcp` |
+| the `.mcp.json` server entry | `@legendscribe/pokayoke/mcp` |
+| `worktrees/` and its gitignore line | `@legendscribe/pokayoke/worktree` |
 | anything else | the package whose `StartInstall` writes it |
 
 For a gated file nothing generates — an `.env`, a hand-written `.mcp.json` — write up the cause and the exact one-line diff and ask the user to apply it. Do not reach for another tool to get around the prompt.
@@ -277,37 +275,37 @@ For a gated file nothing generates — an `.env`, a hand-written `.mcp.json` —
 
 ## siegelense
 
-Applies in any repo `lockdown-kit init` has touched — siegelense works the same way everywhere it runs.
+Applies in any repo `pokayoke init` has touched — siegelense works the same way everywhere it runs.
 
-**`lockdown-kit siegelense` drives a real running instance and returns what it measures, never what the code claims.** Reach for it whenever a claim needs proof against a live system: a click really fires its request, an error really shows on screen, a fix really changed what renders. `discover` and a code read tell you what SHOULD happen; siegelense tells you what DID.
+**`pokayoke siegelense` drives a real running instance and returns what it measures, never what the code claims.** Reach for it whenever a claim needs proof against a live system: a click really fires its request, an error really shows on screen, a fix really changed what renders. `discover` and a code read tell you what SHOULD happen; siegelense tells you what DID.
 
 It boots a throwaway instance, drives it with a batch of steps, and reads back readings — console, network, screenshots, server logs — never a verdict. Comparing two readings to decide pass or fail is yours to do.
 
-**Start here:** `lockdown-kit siegelense docs --for <scope>` — `walking` (drive a browser and record what you see), `attacking` (stress it and measure what breaks), `fixing` (read a finished run's evidence and reproduce it), or `seeding` (start a headless instance, seed a recipe and read back what it really produced). `lockdown-kit siegelense <call> --help` gives one call's flags, refusals and example.
+**Start here:** `pokayoke siegelense docs --for <scope>` — `walking` (drive a browser and record what you see), `attacking` (stress it and measure what breaks), `fixing` (read a finished run's evidence and reproduce it), or `seeding` (start a headless instance, seed a recipe and read back what it really produced). `pokayoke siegelense <call> --help` gives one call's flags, refusals and example.
 
 ---
 
 ## Adding a Gateway npm or bin Wrapper
 
-Applies in a consumer repo `lockdown-kit init` has touched — this monorepo's gateway packages hold every wrapper.
+Applies in a consumer repo `pokayoke init` has touched — this monorepo's gateway packages hold every wrapper.
 
-**`packages/@gateway/npm/src/` fills itself.** `lockdown-kit init`, every bare `npm install` (the root `postinstall`), and the agent hook after `npm install <pkg>` give every `dependencies` entry, and every `devDependencies` entry something imports, a folder there: lockdown-kit's own wrapper when one fits your installed version and compiles, otherwise a one-line passthrough barrel plus its test. An untyped one (marker `GENERATED-UNTYPED-STAND-IN`) heals itself once the package ships types. An existing folder is never overwritten, so edit a generated one freely. `lockdown-kit gateway-sync` runs the same sync by hand.
+**`packages/@gateway/npm/src/` fills itself.** `pokayoke init`, every bare `npm install` (the root `postinstall`), and the agent hook after `npm install <pkg>` give every `dependencies` entry, and every `devDependencies` entry something imports, a folder there: pokayoke's own wrapper when one fits your installed version and compiles, otherwise a one-line passthrough barrel plus its test. An untyped one (marker `GENERATED-UNTYPED-STAND-IN`) heals itself once the package ships types. An existing folder is never overwritten, so edit a generated one freely. `pokayoke gateway-sync` runs the same sync by hand.
 
-A barrel-only subpath needs no stub. Add a `.stub.ts` once you add a wrapper file. `packages/@gateway/node/` and `packages/@gateway/browser/` hold lockdown-kit's real source: a wrapper plus its `.proxy.ts` and `.stub.ts`. For lockdown-kit's OWN npm/bin wrappers, read `node_modules/@legendscribe/lockdown-kit-npm/src` and `node_modules/@legendscribe/lockdown-kit-bin/src` — both ship real source, not `dist` only.
+A barrel-only subpath needs no stub. Add a `.stub.ts` once you add a wrapper file. `packages/@gateway/node/` and `packages/@gateway/browser/` hold pokayoke's real source: a wrapper plus its `.proxy.ts` and `.stub.ts`. For pokayoke's OWN npm/bin wrappers, read `node_modules/@legendscribe/pokayoke/npm/src` and `node_modules/@legendscribe/pokayoke/bin/src` — both ship real source, not `dist` only.
 
 A package Jest cannot load gets a module mock beside its wrapper, `packages/@gateway/npm/src/<folder>/<folder>.jest-mock.cjs`, and Jest loads it for every test that imports that gateway, with no config edit.
 
 `packages/@gateway/bin/` starts EMPTY, holding only a placeholder `src/index.d.ts`. Write a program's wrapper under `packages/@gateway/bin/src/<subpath>/` by hand, and delete the placeholder once the first real subpath exists.
 
-**Never import lockdown-kit's own gateway.** A wrapper imports only the consumer's own copy — never `@legendscribe/lockdown-kit-{npm,node,browser,bin}` from `node_modules`. Read the installed package only to copy a shape from.
+**Never import pokayoke's own gateway.** A wrapper imports only the consumer's own copy — never `@legendscribe/pokayoke-{npm,node,browser,bin}` from `node_modules`. Read the installed package only to copy a shape from.
 
-`lockdown-kit create-package` refuses a name scoped `@gateway` — a wrapper is not a scaffolded package. Add the folder by hand instead.
+`pokayoke create-package` refuses a name scoped `@gateway` — a wrapper is not a scaffolded package. Add the folder by hand instead.
 
 ---
 
 ## Making Decisions
 
-Applies in any repo `lockdown-kit init` has touched.
+Applies in any repo `pokayoke init` has touched.
 
 **Measure before you choose a direction.** Planning a feature, weigh its performance and read the real system: real files, real sizes, real counts. A guess is not a direction.
 

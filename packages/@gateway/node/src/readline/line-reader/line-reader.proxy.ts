@@ -1,6 +1,6 @@
 import { createInterface } from 'readline';
 import { Readable } from 'stream';
-import { registerMock, requireActual } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock, requireActual } from '@legendscribe/pokayoke/testing/register-mock';
 
 const isReadableStream = (value: unknown): boolean => value instanceof Readable;
 

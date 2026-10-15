@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { moduleReferenceContract } from './module-reference-contract';
 import type { ModuleReference } from './module-reference-contract';

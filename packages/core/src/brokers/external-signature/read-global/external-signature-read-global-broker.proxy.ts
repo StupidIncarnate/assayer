@@ -1,4 +1,4 @@
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 import { contentHashTransformer } from '../../../transformers/content-hash/content-hash-transformer';
 import { externalSignatureReadGlobalDeclarationBroker } from '../read-global-declaration/external-signature-read-global-declaration-broker';

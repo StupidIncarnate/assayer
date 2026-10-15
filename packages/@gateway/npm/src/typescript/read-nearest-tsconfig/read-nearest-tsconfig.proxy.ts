@@ -1,6 +1,6 @@
 import { findConfigFile, parseJsonText, readJsonConfigFile } from '../bundled-typescript/bundled-typescript';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/pokayoke/testing/register-mock';
 
 // The two calls that read the disk through `ts.sys` are staged: the tsconfig search by its search path,
 // and the tsconfig read by its exact path. The read answers with a real JSON source file parsed from

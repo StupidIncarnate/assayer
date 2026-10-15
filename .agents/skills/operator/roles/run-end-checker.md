@@ -1,4 +1,4 @@
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Run-end checker
 
@@ -21,8 +21,7 @@ path.
    production server), build first, as the build-discipline snippet's table in your context lists. That snippet says
    a dispatched agent never builds, because builds collide in a shared tree. The root worktree is not shared while you
    run, so the build is yours.
-4. **Run the full ward:** `npm run ward`, with `timeout: 600000`. You are the only role that runs a bare ward. A
-   whole-repo run can take longer than that timeout. Keep waiting for its result, and never start a second one.
+4. **Run the full ward:** `npm run ward`. You are the only role that runs a bare ward.
 5. **Run every extra verify command the root `CLAUDE.md` names** (for example assayer's `npm run test:syntax`, and
    `npm run test:generated -- <folder>/` once per top folder), one at a time.
 6. **Run every step in `gate.md`.** Compare what you see with what each step says must be seen. Read the server log
@@ -47,7 +46,6 @@ operator sends it back to that slice as a repair.
 ## Rules
 
 - **Never merge into `main`.** That is the user's job.
-- **Never run jest, tsc, eslint or playwright directly.** Ward runs them.
 - **Never work around a lint rule,** and never write source through Bash.
 - **Stop everything you start** before you reply.
 - **At one hour, stop.** Leave no file half-edited, write what passed and what is left into "Report", and reply

@@ -6,7 +6,7 @@
  * none of which cleans up on a failed rename.
  *
  * USAGE:
- * await writeFileAtomic('/repo/.ls-lockdown-kit/registry.json', '{"instances":[]}');
+ * await writeFileAtomic('/repo/.ls-pokayoke/registry.json', '{"instances":[]}');
  * // Writes registry.json.tmp, renames it onto registry.json, and removes the tmp file on failure
  */
 

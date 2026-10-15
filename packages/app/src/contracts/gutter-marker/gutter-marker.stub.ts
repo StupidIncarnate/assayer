@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { gutterMarkerContract } from './gutter-marker-contract';
 import type { GutterMarker } from './gutter-marker-contract';

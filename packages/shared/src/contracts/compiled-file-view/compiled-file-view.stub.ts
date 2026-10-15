@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { compiledFileViewContract } from './compiled-file-view-contract';
 import type { CompiledFileView } from './compiled-file-view-contract';

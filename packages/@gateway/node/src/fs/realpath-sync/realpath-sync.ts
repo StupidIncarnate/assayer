@@ -5,7 +5,7 @@
  * fallback that hands back the unresolved name. A symlink loop throws ELOOP raw.
  *
  * USAGE:
- * const resolved = realpathSync('/repo/.lockdown-kit-assets/siegelense-assets');
+ * const resolved = realpathSync('/repo/.pokayoke-assets/siegelense-assets');
  * // Returns the fully resolved path; throws on ENOENT, ELOOP and every other failure
  */
 import { realpathSync as nodeRealpathSync } from 'fs';

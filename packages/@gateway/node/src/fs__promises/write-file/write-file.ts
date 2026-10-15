@@ -4,7 +4,7 @@
  * truncated file, so reach for writeFileAtomic when a reader must never see a half-written file.
  *
  * USAGE:
- * await writeFile('/repo/.ls-lockdown-kit/queue.json', '{"items":[]}');
+ * await writeFile('/repo/.ls-pokayoke/queue.json', '{"items":[]}');
  * // Writes the file; rejects with the raw NodeJS.ErrnoException on ENOENT/EACCES/EISDIR
  */
 

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { compileProgressEventContract } from './compile-progress-event-contract';
 import type { CompileProgressEvent } from './compile-progress-event-contract';

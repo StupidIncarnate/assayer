@@ -1,7 +1,7 @@
 import { fork, type ChildProcess } from 'child_process';
 import { EventEmitter, Readable } from 'stream';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/pokayoke/testing/register-mock';
 
 // `ChildProcess.channel` and `ChildProcess.stderr` are declared readonly, so the fake keeps its own
 // writable members and is cast to `ChildProcess` only on the way out.

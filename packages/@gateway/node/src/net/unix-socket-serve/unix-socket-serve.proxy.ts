@@ -1,7 +1,7 @@
 import { createServer, Server, Socket } from 'net';
 import { dirname } from 'path';
 import { existsSync, mkdirSync, unlinkSync } from 'fs';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 type ConnectionHandler = (socket: Socket) => void;
 

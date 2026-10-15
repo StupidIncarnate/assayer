@@ -1,14 +1,14 @@
-const lockdownKit = require('@legendscribe/lockdown-kit-eslint-plugin').default;
-const { configFlatConfigBroker } = require('@legendscribe/lockdown-kit-eslint-plugin');
+const pokayoke = require('@legendscribe/pokayoke/eslint-plugin').default;
+const { configFlatConfigBroker } = require('@legendscribe/pokayoke/eslint-plugin');
 // Assayer's own local rules — this repo's value contracts mean nothing to any other project, so they
-// cannot live in @legendscribe/lockdown-kit-eslint-plugin. See eslint-rules/index.js.
+// cannot live in @legendscribe/pokayoke/eslint-plugin. See eslint-rules/index.js.
 const assayerLocalRules = require('./eslint-rules');
 
 module.exports = [
     ...configFlatConfigBroker({
         startDir: __dirname,
-        plugin: lockdownKit,
-        prettier: true,
+        plugin: pokayoke,
+        prettier: false,
         jest: true,
         javascript: true,
     }),
@@ -27,7 +27,7 @@ module.exports = [
         ignores: ['smoke-repo/**'],
     },
     {
-        // eslint-rules/ is Assayer's own local ESLint plugin; a lint rule fits no lockdown-kit folder type.
+        // eslint-rules/ is Assayer's own local ESLint plugin; a lint rule fits no pokayoke folder type.
         ignores: ['eslint-rules/**'],
     },
     {

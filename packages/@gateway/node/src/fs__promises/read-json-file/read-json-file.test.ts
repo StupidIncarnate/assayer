@@ -6,9 +6,9 @@ describe('readJsonFile', () => {
   describe('successful reads', () => {
     it('VALID: {path: valid JSON file} => returns the parsed value', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '{"port":3737}' });
 
-      const result = await readJsonFile('/repo/.lockdown-kit.json');
+      const result = await readJsonFile('/repo/.pokayoke.json');
 
       expect(result).toStrictEqual({ port: 3737 });
     });
@@ -17,19 +17,19 @@ describe('readJsonFile', () => {
   describe('invalid content', () => {
     it('INVALID: {path: malformed JSON} => throws a SyntaxError naming the path', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{not json' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '{not json' });
 
-      await expect(readJsonFile('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
+      await expect(readJsonFile('/repo/.pokayoke.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.pokayoke.json'),
       );
     });
 
     it('EMPTY: {path: an empty file} => throws a SyntaxError, because empty is not JSON', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '' });
 
-      await expect(readJsonFile('/repo/.lockdown-kit.json')).rejects.toStrictEqual(
-        new SyntaxError('Invalid JSON in /repo/.lockdown-kit.json'),
+      await expect(readJsonFile('/repo/.pokayoke.json')).rejects.toStrictEqual(
+        new SyntaxError('Invalid JSON in /repo/.pokayoke.json'),
       );
     });
   });
@@ -67,11 +67,11 @@ describe('readJsonFile', () => {
     it('VALID: {returnsRawMatchingPath, a predicate} => resolves for a path the predicate accepts', async () => {
       const proxy = readJsonFileProxy();
       proxy.returnsRawMatchingPath({
-        path: (value) => String(value).endsWith('.lockdown-kit.json'),
+        path: (value) => String(value).endsWith('.pokayoke.json'),
         rawContents: '{"port":3737}',
       });
 
-      const result = await readJsonFile('/resolved/at/runtime/.lockdown-kit.json');
+      const result = await readJsonFile('/resolved/at/runtime/.pokayoke.json');
 
       expect(result).toStrictEqual({ port: 3737 });
     });
@@ -91,12 +91,12 @@ describe('readJsonFile', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readJsonFileProxy();
-      proxy.returnsRaw({ path: '/repo/.lockdown-kit.json', rawContents: '{"port":3737}' });
+      proxy.returnsRaw({ path: '/repo/.pokayoke.json', rawContents: '{"port":3737}' });
 
-      await readJsonFile('/repo/.lockdown-kit.json');
+      await readJsonFile('/repo/.pokayoke.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
-        ['/repo/.lockdown-kit.json', 'utf8'],
+      expect(proxy.getCallsFor({ path: '/repo/.pokayoke.json' })).toStrictEqual([
+        ['/repo/.pokayoke.json', 'utf8'],
       ]);
     });
   });

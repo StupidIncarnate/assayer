@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { specimenDriftContract } from './specimen-drift-contract';
 import type { SpecimenDrift } from './specimen-drift-contract';

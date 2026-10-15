@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 import { ProcessKillRecordedErrorStub } from './process-kill-recorded-error.stub';
 
 type KillSignal = NodeJS.Signals | number | undefined;

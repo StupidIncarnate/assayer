@@ -1,5 +1,5 @@
 {
-  "extends": ["../../tsconfig.json", "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.package"],
+  "extends": ["../../tsconfig.json", "@legendscribe/pokayoke/eslint-plugin/tsconfig.package"],
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",

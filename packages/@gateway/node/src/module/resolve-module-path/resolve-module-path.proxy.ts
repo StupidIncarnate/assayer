@@ -1,5 +1,5 @@
 import { createRequire } from 'module';
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 import * as resolveModulePathModule from './resolve-module-path';
 
 // The wrapper's own module is the seam a caller's test stages, addressed by the exact specifier and

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { orderedBoundsContract } from './ordered-bounds-contract';
 import type { OrderedBounds } from './ordered-bounds-contract';

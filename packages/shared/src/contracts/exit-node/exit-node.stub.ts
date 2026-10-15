@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { exitNodeContract } from './exit-node-contract';
 import type { ExitNode } from './exit-node-contract';

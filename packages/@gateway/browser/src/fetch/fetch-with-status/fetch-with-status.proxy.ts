@@ -1,5 +1,5 @@
-import { StartEndpointMock } from '@legendscribe/lockdown-kit-testing';
-import type { HttpMethod } from '@legendscribe/lockdown-kit-testing';
+import { StartEndpointMock } from '@legendscribe/pokayoke/testing';
+import type { HttpMethod } from '@legendscribe/pokayoke/testing';
 
 // See fetch-json.proxy.ts's own header for why this no longer spies on `globalThis.fetch` directly.
 type Endpoint = ReturnType<typeof StartEndpointMock.listen>;

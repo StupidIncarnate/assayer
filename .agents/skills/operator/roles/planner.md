@@ -1,4 +1,4 @@
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Planner
 
@@ -44,7 +44,7 @@ guidance text once you have filled it in. Leave the sections other roles fill in
    `discover`. Pass `root: <root worktree path>` to every one of them.
 5. For every export the work changes, find every caller with `discover`. A caller you miss is a slice that breaks
    at merge.
-6. Read the repo's `.lockdown-kit.json` to see whether siegelense can start the app. Its lane must name a command that
+6. Read the repo's `.pokayoke.json` to see whether siegelense can start the app. Its lane must name a command that
    exists. If it cannot, you mark app-running steps for the merge agent (see "Manual verification steps").
 
 ## How to slice
@@ -131,7 +131,7 @@ Write the steps for every slice:
 - **One step per behavior the slice adds or changes** that someone can see: a CLI command's output, a route's
   response, a tool's answer, a screen.
 - **What to start**, with the exact command. When the app must be running, start a siegelense instance
-  (`lockdown-kit siegelense docs --for seeding`), which picks its own free ports. Never `npm run dev`.
+  (`pokayoke siegelense docs --for seeding`), which picks its own free ports. Never `npm run dev`.
 - **When siegelense cannot start the app** in this repo (step 6 of "Before you write anything"), write the step with
   `npm run dev` and mark it "merge agent: needs the fixed-port slot". The slice lead skips it, and the merge agent
   runs it, because only the merge agent may hold that slot.

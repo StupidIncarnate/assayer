@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { argvReadContract } from './argv-read-contract';
 import type { ArgvRead } from './argv-read-contract';

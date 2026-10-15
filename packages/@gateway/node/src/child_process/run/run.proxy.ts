@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from 'child_process';
 import { EventEmitter, Readable, Writable } from 'stream';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { RecordedCalls } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
+import type { RecordedCalls } from '@legendscribe/pokayoke/testing/register-mock';
 
 interface ProxyConfig {
   exitCode: number | null;

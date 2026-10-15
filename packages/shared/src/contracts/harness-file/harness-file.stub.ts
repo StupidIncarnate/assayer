@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { harnessFileContract } from './harness-file-contract';
 import type { HarnessFile } from './harness-file-contract';

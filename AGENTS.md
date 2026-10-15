@@ -4,7 +4,7 @@ Go read [CLAUDE.md](file://./CLAUDE.md) to get context on the project and repo b
 
 ## Antigravity MCP Calling
 
-All lockdown-kit MCP tools (`get-project-map`, `discover`, `get-architecture`, etc.) are available via `call_mcp_tool` under server `lockdown-kit_lockdown-kit`.
+All pokayoke MCP tools (`get-project-map`, `discover`, `get-architecture`, etc.) are available via `call_mcp_tool` under server `pokayoke_pokayoke`.
 
 ## Specimen Test Execution Concurrency
 

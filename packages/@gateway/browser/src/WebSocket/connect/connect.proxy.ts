@@ -1,5 +1,5 @@
-import { registerMock, registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { MockHandle, SpyOnHandle } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock, registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
+import type { MockHandle, SpyOnHandle } from '@legendscribe/pokayoke/testing/register-mock';
 
 interface MockSocket {
   onopen: (() => void) | null;

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { harnessInputKeyContract } from './harness-input-key-contract';
 import type { HarnessInputKey } from './harness-input-key-contract';

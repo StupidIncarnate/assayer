@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { walkFileResultContract } from './walk-file-result-contract';
 import type { WalkFileResult } from './walk-file-result-contract';

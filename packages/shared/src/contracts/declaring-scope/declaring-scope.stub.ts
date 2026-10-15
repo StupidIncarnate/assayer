@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { declaringScopeContract } from './declaring-scope-contract';
 import type { DeclaringScope } from './declaring-scope-contract';

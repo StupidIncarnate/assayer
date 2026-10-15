@@ -1,4 +1,4 @@
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 import type { CompilerOptions } from '#gateway/npm/typescript';
 

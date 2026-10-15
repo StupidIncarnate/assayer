@@ -11,6 +11,6 @@
  *
  * USAGE:
  * import type { ValueMatcher } from '../gateway-test-support/value-matcher';
- * const matchesQuestKey: ValueMatcher = (value) => String(value).startsWith('lockdown-kit:quest:');
+ * const matchesQuestKey: ValueMatcher = (value) => String(value).startsWith('pokayoke:quest:');
  */
 export type ValueMatcher = string | ((value: unknown) => boolean);

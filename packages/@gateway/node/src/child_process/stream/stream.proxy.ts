@@ -1,6 +1,6 @@
 import { spawn } from 'child_process';
 import { PassThrough } from 'stream';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 import { ChildProcessStub } from '../child-process/child-process.stub';
 
 const createMockChild = (): {

@@ -7,7 +7,7 @@
  * can throw something that is not an `Error` instance.
  *
  * USAGE:
- * writeItem({ key: 'lockdown-kit:comment-queue:quest-1', value: '[]' });
+ * writeItem({ key: 'pokayoke:comment-queue:quest-1', value: '[]' });
  * // Returns { success: true } on a real write, { success: false, error } if storage refused it
  */
 

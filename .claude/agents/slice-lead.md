@@ -7,9 +7,9 @@ hooks:
     - matcher: Bash
       hooks:
         - type: command
-          command: lockdown-kit-pre-bash-role slice-lead
+          command: '"$CLAUDE_PROJECT_DIR"/node_modules/.bin/pokayoke-pre-bash-role slice-lead'
 ---
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Slice lead
 
@@ -27,7 +27,7 @@ planner gave this slice the manager shape: you launch workers, and they write th
 
 Before you read or edit anything else, create your worktree:
 
-`mcp__lockdown-kit__create-worktree({ name: '<worktree name>', sourceBranch: '<root branch>' })`
+`mcp__pokayoke__create-worktree({ name: '<worktree name>', sourceBranch: '<root branch>' })`
 
 It returns the worktree's absolute path. You work only there. You start in the operator's checkout, so any file you
 edit before this step, or outside that path, lands in the wrong tree.
@@ -85,18 +85,12 @@ These are the only commands you run, apart from reading files, git on your slice
 | After a group of files you have just written | `npm run ward -- --files=<those files>` |
 | For the whole slice, before you commit | `npm run ward -- --packages=<each package the slice changes>` |
 | Each extra verify command the slice document lists | exactly as the slice document writes it |
-| A manual verification step that needs the app running | a siegelense instance (`lockdown-kit siegelense docs --for seeding`) |
+| A manual verification step that needs the app running | a siegelense instance (`pokayoke siegelense docs --for seeding`) |
 | A quick look at a real value before you write a test's expected value | an `npx tsx` script in your scratch folder, outside the repo |
 
-- **What `--files=` checks.** Lint, unit and integration on the files you name. It runs no typecheck.
-- **What `--packages=` checks.** Every check type for the package, and the typecheck also covers every package that
-  depends on it. Pass every package the slice changes, and every package that uses a shared file you changed.
-- **Run each ward command with `timeout: 600000`.** Run it once per state of the tree. Change something, then run it
-  again. Never re-run an unchanged tree.
 - **Never run `--changed` or `--changed-from`.** Name the scope: `--files=` or `--packages=`.
 - **Never run a bare `npm run ward`.** It runs only before a merge into the main branch: the merge agent and the
   run-end checker do that.
-- **Never run jest, tsc, eslint or playwright directly.** Ward runs them.
 - **Never run `npm run dev`, and never run e2e** unless this is the e2e slice (its worktree name ends in `-e2e`). A
   command guard refuses both anywhere else. They use fixed ports or folders, and the operator lets only one agent on
   the machine hold them. Use siegelense when you need the app running. Kill every
@@ -112,8 +106,7 @@ These are the only commands you run, apart from reading files, git on your slice
 - **Builds.** The build-discipline snippet in your context says a dispatched agent never builds, because builds
   collide in a shared tree. Your worktree is not shared: you are the only process in it. So you build there whenever
   the next thing you run is compiled output, as that snippet's table lists. That includes integration tests that
-  start a built CLI or server: rebuild that package after you change its source and before you run them. Ward
-  rebuilds stale gateway packages itself.
+  start a built CLI or server: rebuild that package after you change its source and before you run them.
 
 ## Manual verification
 

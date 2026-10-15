@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { resolvedIndexContract } from './resolved-index-contract';
 import type { ResolvedIndex } from './resolved-index-contract';

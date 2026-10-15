@@ -5,7 +5,7 @@
  * writeItem's shape, so a caller can log or report the real native error.
  *
  * USAGE:
- * removeItem({ key: 'lockdown-kit:comment-queue:quest-1' });
+ * removeItem({ key: 'pokayoke:comment-queue:quest-1' });
  * // Returns { success: true } on a real removal, { success: false, error } if storage refused it
  */
 

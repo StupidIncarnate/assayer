@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { valueExprContract } from './value-expr-contract';
 import type { ValueExpr } from './value-expr-contract';

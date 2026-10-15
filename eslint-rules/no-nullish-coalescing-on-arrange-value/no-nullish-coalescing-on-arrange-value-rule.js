@@ -81,11 +81,13 @@ module.exports = {
     const sourceCode = context.sourceCode;
     const parserServices = sourceCode.parserServices;
 
-    // No type information (a plain JS file, or a parser that never attached services): this rule has
+    // No type information (a plain JS file, a parser that never attached services, or a file parsed
+    // with `projectService: false`, where typescript-eslint sets `program` to null): this rule has
     // nothing to check the left operand's type against, so it stays silent rather than guessing.
     if (
       parserServices === undefined ||
       parserServices.program === undefined ||
+      parserServices.program === null ||
       parserServices.esTreeNodeToTSNodeMap === undefined
     ) {
       return {};

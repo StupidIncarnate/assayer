@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { derivedTestCaseContract } from './derived-test-case-contract';
 import type { DerivedTestCase } from './derived-test-case-contract';

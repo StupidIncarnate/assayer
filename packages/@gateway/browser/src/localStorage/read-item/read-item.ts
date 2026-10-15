@@ -7,7 +7,7 @@
  * invalid one means) stays the caller's job.
  *
  * USAGE:
- * readItem({ key: 'lockdown-kit:comment-queue:quest-1' });
+ * readItem({ key: 'pokayoke:comment-queue:quest-1' });
  * // Returns the stored string, or null if absent, storage-disabled, or otherwise unreadable
  */
 

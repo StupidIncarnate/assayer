@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { compiledTreeContract } from './compiled-tree-contract';
 import type { CompiledTree } from './compiled-tree-contract';

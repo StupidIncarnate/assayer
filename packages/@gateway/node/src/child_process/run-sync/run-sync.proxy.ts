@@ -1,5 +1,5 @@
 import { execFileSync } from 'child_process';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 export const runSyncProxy = (): {
   setupSuccess: (params: { command: string; stdout: string }) => void;

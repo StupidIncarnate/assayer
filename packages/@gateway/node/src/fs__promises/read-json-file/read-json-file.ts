@@ -4,7 +4,7 @@
  * cannot tell either. Reach for readJsonFileIfExists when a missing file is an ordinary answer.
  *
  * USAGE:
- * await readJsonFile('/repo/.lockdown-kit.json');
+ * await readJsonFile('/repo/.pokayoke.json');
  * // Returns the parsed value; throws a SyntaxError naming the path on invalid JSON
  */
 

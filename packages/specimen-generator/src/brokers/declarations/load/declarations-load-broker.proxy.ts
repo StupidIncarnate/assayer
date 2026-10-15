@@ -3,7 +3,7 @@ import { readdirSyncProxy } from '#gateway/node/fs/readdir-sync/readdir-sync.pro
 import { join } from '#gateway/node/path';
 import { readTsconfigProxy } from '#gateway/npm/typescript/read-tsconfig/read-tsconfig.proxy';
 
-import { requireActual } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { requireActual } from '@legendscribe/pokayoke/testing/register-mock';
 
 import { generatorLayoutStatics } from '../../../statics/generator-layout/generator-layout-statics';
 import { typescriptLibLocateBrokerProxy } from '../../typescript-lib/locate/typescript-lib-locate-broker.proxy';

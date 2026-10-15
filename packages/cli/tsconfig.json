@@ -1,6 +1,6 @@
 {
   "extends": [
     "../../tsconfig.json",
-    "@legendscribe/lockdown-kit-eslint-plugin/tsconfig.package"
+    "@legendscribe/pokayoke/eslint-plugin/tsconfig.package"
   ]
 }

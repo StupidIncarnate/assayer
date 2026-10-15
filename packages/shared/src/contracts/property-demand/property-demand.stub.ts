@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { propertyDemandContract } from './property-demand-contract';
 import type { PropertyDemand } from './property-demand-contract';

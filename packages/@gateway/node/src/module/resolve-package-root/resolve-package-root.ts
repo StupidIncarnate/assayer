@@ -8,8 +8,8 @@
  * function recurses through itself rather than delegating to an unexported helper.
  *
  * USAGE:
- * resolvePackageRoot({ specifier: '@legendscribe/lockdown-kit-shared/contracts' });
- * // Returns the absolute path to @legendscribe/lockdown-kit-shared's package root, or null if not installed
+ * resolvePackageRoot({ specifier: '@legendscribe/pokayoke/shared/contracts' });
+ * // Returns the absolute path to @legendscribe/pokayoke/shared's package root, or null if not installed
  */
 
 import { dirname } from 'path';

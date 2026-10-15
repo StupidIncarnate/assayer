@@ -4,7 +4,7 @@
  * are real problems with the read, not an absent file.
  *
  * USAGE:
- * await readFileIfExists('/repo/.lockdown-kit.json');
+ * await readFileIfExists('/repo/.pokayoke.json');
  * // Returns the file's contents, or null when the path does not exist
  */
 

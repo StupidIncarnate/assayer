@@ -24,7 +24,7 @@ The work comes from the user's request, or from the plan document named at `$ARG
 | slice lead | the one agent launched into a slice worktree |
 | agent number | how many agents may run at once. Only the user sets it |
 | fixed-port slot | permission to run `npm run dev` or e2e. Both use fixed ports or fixed folders, so only one agent on the machine may hold the slot at a time. You hand it out |
-| siegelense | lockdown-kit's tool for starting a throwaway copy of the app. Each copy picks its own free ports, home folder and browser, so many can run at once without the slot |
+| siegelense | pokayoke's tool for starting a throwaway copy of the app. Each copy picks its own free ports, home folder and browser, so many can run at once without the slot |
 
 Each role is a Claude Code agent type, defined in `.claude/agents/<role>.md`: `planner`, `slice-lead`, `worker`,
 `reviewer`, `merge-agent` and `run-end-checker`. Launch each with `subagent_type: '<role>'`. The definition carries the
@@ -95,8 +95,8 @@ every dispatch prompt there with "Read `.agents/skills/operator/roles/<role>.md`
 
 1. **Get the agent number.** If the user's request names one, use it. If not, ask the user how many agents may run at
    once, and wait for the answer before you dispatch anything. This is the only time you wait on the user.
-2. **Create the root worktree** with `mcp__lockdown-kit__create-worktree({ name: '<run name>' })` (Antigravity:
-   `create-worktree` under server `lockdown-kit`). Never create a worktree by hand.
+2. **Create the root worktree** with `mcp__pokayoke__create-worktree({ name: '<run name>' })` (Antigravity:
+   `create-worktree` under server `pokayoke`). Never create a worktree by hand.
 3. **Get a plan.** If the run folder already holds a `plan.md` with slices, use it. If not, launch the planner:
 
    ```text

@@ -1,5 +1,5 @@
 const { dirname } = require('path');
-const reactBaseConfig = require('@legendscribe/lockdown-kit-testing/jest-config-base-react');
+const reactBaseConfig = require('@legendscribe/pokayoke/testing/jest-config-base-react');
 
 // Share a single React instance regardless of npm hoisting.
 const reactDir = dirname(require.resolve('react/package.json'));

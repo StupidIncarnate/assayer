@@ -3,7 +3,7 @@
  * set is a no-op, so a test can call it unconditionally in its cleanup.
  *
  * USAGE:
- * deleteEnv('LOCKDOWN_KIT_HOME');
+ * deleteEnv('POKAYOKE_HOME');
  * // process.env no longer has the key at all — getEnv returns undefined, not an empty string
  */
 

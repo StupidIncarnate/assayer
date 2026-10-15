@@ -1,4 +1,4 @@
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 import { AbortErrorStub } from '../abort-error/abort-error.stub';
 import { ConnectionRefusedRecordedErrorStub } from '../../net/connection-refused-recorded-error/connection-refused-recorded-error.stub';
 

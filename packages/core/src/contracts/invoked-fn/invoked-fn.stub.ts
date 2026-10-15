@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { invokedFnContract } from './invoked-fn-contract';
 import type { InvokedFn } from './invoked-fn-contract';

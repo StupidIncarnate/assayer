@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { fallthroughArmContract } from './fallthrough-arm-contract';
 import type { FallthroughArm } from './fallthrough-arm-contract';

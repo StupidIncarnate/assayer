@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { conditionLeafContract } from './condition-leaf-contract';
 import type { ConditionLeaf } from './condition-leaf-contract';

@@ -1,7 +1,7 @@
 import { ErrorStub } from '#gateway/browser/Error/error.stub';
 import { screen } from '#gateway/npm/testing-library__react';
 import userEvent from '#gateway/npm/testing-library__user-event';
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 import { useCompiledTreeBindingProxy } from '../../bindings/use-compiled-tree/use-compiled-tree-binding.proxy';
 import { useFileRunBindingProxy } from '../../bindings/use-file-run/use-file-run-binding.proxy';

@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
-import { registerMock, registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock, registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 // `ChildProcess.killed` is declared readonly, so a fake built by casting straight to `ChildProcess`
 // can never assign it (TS2540). This interface keeps `killed`/`kill` writable on the fake itself;

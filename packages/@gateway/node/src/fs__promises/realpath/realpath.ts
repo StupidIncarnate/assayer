@@ -5,7 +5,7 @@
  * fallback that hands back the unresolved name.
  *
  * USAGE:
- * await realpath('/repo/.lockdown-kit-assets/siegelense-assets');
+ * await realpath('/repo/.pokayoke-assets/siegelense-assets');
  * // Returns the fully resolved path; rejects on ENOENT and every other failure
  */
 

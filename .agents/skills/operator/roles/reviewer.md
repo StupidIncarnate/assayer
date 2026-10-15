@@ -1,4 +1,4 @@
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Reviewer
 
@@ -89,7 +89,7 @@ cover, write "No glue steps added: <the reason>".
 ### How every step you write is written
 
 - **What to start**, with the exact command. When the app must be running, use a siegelense instance
-  (`lockdown-kit siegelense docs --for seeding`), which picks its own free ports. If the repo's siegelense cannot
+  (`pokayoke siegelense docs --for seeding`), which picks its own free ports. If the repo's siegelense cannot
   start the app, write the step with `npm run dev` and mark it "merge agent: needs the fixed-port slot". Only the
   merge agent may run `npm run dev`.
 - **What to do**, exactly: the command line, the HTTP request, the MCP tool call, or the clicks and the test ids to

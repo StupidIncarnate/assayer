@@ -1,4 +1,4 @@
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Merge agent
 
@@ -24,9 +24,8 @@ path, the review file's path and the run folder's path.
      merge (`git -C <worktree> merge --abort`) and hand the slice back.
 4. **Rebuild what the merge made stale.** The merge changed source under the worktree's old compiled output. Before
    any check, build every package whose compiled output a check or manual step runs: a CLI that integration tests
-   start, an MCP server, a server a step drives. Use `npm run build --workspace=<package>` for each one. Ward rebuilds
-   stale gateway packages itself.
-5. **Run the checks,** each ward command with `timeout: 600000`:
+   start, an MCP server, a server a step drives. Use `npm run build --workspace=<package>` for each one.
+5. **Run the checks:**
 
    | Check | Command |
    |---|---|
@@ -69,7 +68,6 @@ into the root branch, the builds in step 4, the checks in step 5, siegelense, an
 step that needs them.
 
 - Never run `--changed` or `--changed-from`. The bare `npm run ward` in step 5 is the one whole-repo run.
-- Never run jest, tsc, eslint or playwright directly.
 - **Builds.** The build-discipline snippet in your context says a dispatched agent never builds, because builds
   collide in a shared tree. The slice worktree is not shared while you work: you are the only process in it. So you
   build there whenever the next thing you run is compiled output, as that snippet's table lists, and always after the

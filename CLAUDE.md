@@ -48,11 +48,9 @@ Assayer that does the AST and type-graph work.
 
 ## Local setup
 
-The `@legendscribe/lockdown-kit-*` and `@legendscribe/brutalpit-*` packages are
-`file:` dependencies. That means the `lockdown-kit` and `brutalpit` repos must be
-checked out as sibling directories, next to this repo, on disk, and built.
-`npm run init` runs `lockdown-kit init && brutalpit init` to install their hooks,
-MCP servers and settings into this repo.
+`npm run init` runs `brutalpit init`, which runs `pokayoke init` first. Together
+they install the hooks, MCP servers and settings of `@legendscribe/pokayoke` and
+`@legendscribe/brutalpit` into this repo.
 
 Verify a change with ward, `npm run test:syntax` and `npm run test:generated`.
 Neither specimen catalogue is part of `ward`'s test graph, so `ward` alone will not
@@ -235,7 +233,7 @@ TypeScript's type graph, the checker's own model of how types and symbols
 connect across the code.
 
 Assayer must work standalone in any TypeScript repo. A repo that follows the
-lockdown-kit conventions is a best-case input. It is never a required
+pokayoke conventions is a best-case input. It is never a required
 input. The full requirement is P3 in `plan/requirements.md`.
 
 ### Degrade gracefully between two tiers of test generation
@@ -574,7 +572,7 @@ requirement is R17 in `plan/requirements.md`.
 ### Assayer tests itself the ordinary way
 
 Assayer's own test suite is plain Jest and Playwright, following the same
-lockdown-kit testing standards used elsewhere. Assayer never verifies
+pokayoke testing standards used elsewhere. Assayer never verifies
 itself using its own config format, because that would let a bug in the
 format hide from its own tests. Its integration tests run the CLI and the
 analyzer against fixture repos, and assert on the output: the generated

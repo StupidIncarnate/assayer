@@ -1,4 +1,4 @@
-<!-- lockdown-kit:operator-role -->
+<!-- pokayoke:operator-role -->
 
 # Worker
 

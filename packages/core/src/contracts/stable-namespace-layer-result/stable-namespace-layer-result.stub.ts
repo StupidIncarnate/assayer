@@ -5,7 +5,7 @@
  * StableNamespaceLayerResultStub();
  * // Returns a valid StableNamespaceLayerResult
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 import { CompileModeStub } from "@assayer/shared/contracts/compile-mode/compile-mode.stub";
 
 import { stableNamespaceLayerResultContract } from "./stable-namespace-layer-result-contract";

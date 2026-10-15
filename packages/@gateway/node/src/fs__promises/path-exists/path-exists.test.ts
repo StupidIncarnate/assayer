@@ -6,9 +6,9 @@ describe('pathExists', () => {
   describe('present path', () => {
     it('VALID: {path: existing} => returns true', async () => {
       const proxy = pathExistsProxy();
-      proxy.present({ path: '/repo/.lockdown-kit.json' });
+      proxy.present({ path: '/repo/.pokayoke.json' });
 
-      const result = await pathExists('/repo/.lockdown-kit.json');
+      const result = await pathExists('/repo/.pokayoke.json');
 
       expect(result).toBe(true);
     });
@@ -26,9 +26,9 @@ describe('pathExists', () => {
 
     it('EDGE: {path: a parent segment that is a file} => returns false on ENOTDIR', async () => {
       const proxy = pathExistsProxy();
-      proxy.notADirectory({ path: '/repo/.lockdown-kit.json/nested' });
+      proxy.notADirectory({ path: '/repo/.pokayoke.json/nested' });
 
-      const result = await pathExists('/repo/.lockdown-kit.json/nested');
+      const result = await pathExists('/repo/.pokayoke.json/nested');
 
       expect(result).toBe(false);
     });
@@ -70,12 +70,12 @@ describe('pathExists', () => {
   describe('call inspection', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = pathExistsProxy();
-      proxy.present({ path: '/repo/.lockdown-kit.json' });
+      proxy.present({ path: '/repo/.pokayoke.json' });
 
-      await pathExists('/repo/.lockdown-kit.json');
+      await pathExists('/repo/.pokayoke.json');
 
-      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit.json' })).toStrictEqual([
-        ['/repo/.lockdown-kit.json'],
+      expect(proxy.getCallsFor({ path: '/repo/.pokayoke.json' })).toStrictEqual([
+        ['/repo/.pokayoke.json'],
       ]);
     });
   });

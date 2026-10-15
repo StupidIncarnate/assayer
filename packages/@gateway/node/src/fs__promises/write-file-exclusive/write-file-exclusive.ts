@@ -5,7 +5,7 @@
  * through. EEXIST rejects raw; that IS the lock signal a caller reads.
  *
  * USAGE:
- * await writeFileExclusive('/repo/.ls-lockdown-kit/boot.lock', String(process.pid));
+ * await writeFileExclusive('/repo/.ls-pokayoke/boot.lock', String(process.pid));
  * // Creates the file; rejects with a raw EEXIST-coded error when it already exists
  */
 

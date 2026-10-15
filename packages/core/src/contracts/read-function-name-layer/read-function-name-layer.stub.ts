@@ -5,7 +5,7 @@
  * ReadFunctionNameLayerStub();
  * // Returns a valid ReadFunctionNameLayer
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 
 import { readFunctionNameLayerContract } from "./read-function-name-layer-contract";
 import type { ReadFunctionNameLayer } from "./read-function-name-layer-contract";

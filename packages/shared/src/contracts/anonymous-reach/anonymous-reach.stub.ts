@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { anonymousReachContract } from './anonymous-reach-contract';
 import type { AnonymousReach } from './anonymous-reach-contract';

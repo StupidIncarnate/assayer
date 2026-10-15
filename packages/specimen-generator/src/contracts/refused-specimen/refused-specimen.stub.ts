@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { refusedSpecimenContract } from './refused-specimen-contract';
 import type { RefusedSpecimen } from './refused-specimen-contract';

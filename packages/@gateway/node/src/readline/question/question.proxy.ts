@@ -1,5 +1,5 @@
 import { createInterface } from 'node:readline/promises';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 class QuestionNotStagedError extends Error {
   public constructor({ prompt }: { prompt: string }) {

@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { functionAnalysisContract } from './function-analysis-contract';
 import type { FunctionAnalysis } from './function-analysis-contract';

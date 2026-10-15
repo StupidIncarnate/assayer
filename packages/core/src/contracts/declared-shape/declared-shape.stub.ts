@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { declaredShapeContract } from './declared-shape-contract';
 import type { DeclaredShape } from './declared-shape-contract';

@@ -4,7 +4,7 @@
  * re-encoding corrupts binary content that isn't valid UTF-8.
  *
  * USAGE:
- * await readFileBytes('/repo/.lockdown-kit-assets/siegelense-assets/step7.png');
+ * await readFileBytes('/repo/.pokayoke-assets/siegelense-assets/step7.png');
  * // Returns the file's raw bytes as a Uint8Array
  */
 

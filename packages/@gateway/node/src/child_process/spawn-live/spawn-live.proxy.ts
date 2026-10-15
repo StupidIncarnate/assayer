@@ -1,6 +1,6 @@
 import { spawn, type ChildProcess } from 'child_process';
 import { EventEmitter, Readable } from 'stream';
-import { registerMock, registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock, registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 
 const createMockChild = (): ChildProcess => {
   const child = new EventEmitter() as ChildProcess;

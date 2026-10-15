@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { traceEventContract } from './trace-event-contract';
 import type { TraceEvent } from './trace-event-contract';

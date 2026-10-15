@@ -1,4 +1,4 @@
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 import { HarnessIndexStub } from '@assayer/shared/contracts/harness-index/harness-index.stub';
 import { ResolvedIndexStub } from '@assayer/shared/contracts/resolved-index/resolved-index.stub';
 import { StubIndexStub } from '@assayer/shared/contracts/stub-index/stub-index.stub';

@@ -1,6 +1,6 @@
 import { readdir } from 'fs/promises';
 import type { Dirent } from 'fs';
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 import { DirentStub } from '../../fs/readdir-entries-sync/dirent.stub';
 import { FsErrorStub } from '../../fs/is-fs-error/fs-error.stub';
 import type { FsError } from '../../fs/is-fs-error/fs-error';

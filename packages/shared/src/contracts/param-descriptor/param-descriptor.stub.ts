@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { paramDescriptorContract } from './param-descriptor-contract';
 import type { ParamDescriptor } from './param-descriptor-contract';

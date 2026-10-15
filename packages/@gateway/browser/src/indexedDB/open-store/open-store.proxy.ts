@@ -1,6 +1,6 @@
 /// <reference lib="dom" />
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
-import type { SpyOnHandle } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
+import type { SpyOnHandle } from '@legendscribe/pokayoke/testing/register-mock';
 import { fakeIndexedDb } from '../../gateway-test-support/fake-indexed-db';
 import type { ValueMatcher } from '../../gateway-test-support/value-matcher';
 

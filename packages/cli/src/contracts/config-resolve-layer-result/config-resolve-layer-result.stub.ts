@@ -5,7 +5,7 @@
  * ConfigResolveLayerResultStub();
  * // Returns a valid ConfigResolveLayerResult
  */
-import type { StubArgument } from "@legendscribe/lockdown-kit-shared/@types";
+import type { StubArgument } from "@legendscribe/pokayoke/shared/@types";
 import { AssayerConfigStub } from "@assayer/shared/contracts/assayer-config/assayer-config.stub";
 
 import { configResolveLayerResultContract } from "./config-resolve-layer-result-contract";

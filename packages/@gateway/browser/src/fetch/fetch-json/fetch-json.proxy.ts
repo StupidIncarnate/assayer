@@ -1,5 +1,5 @@
-import { StartEndpointMock } from '@legendscribe/lockdown-kit-testing';
-import type { HttpMethod } from '@legendscribe/lockdown-kit-testing';
+import { StartEndpointMock } from '@legendscribe/pokayoke/testing';
+import type { HttpMethod } from '@legendscribe/pokayoke/testing';
 
 // A raw `registerSpyOn({ object: globalThis, method: 'fetch' })` (this file's own previous shape)
 // replaces the ONE shared `globalThis.fetch` handle for the whole test file, throwing on any call

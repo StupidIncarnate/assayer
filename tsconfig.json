@@ -1,6 +1,10 @@
 {
-  "extends": "@legendscribe/lockdown-kit-eslint-plugin/tsconfig",
-  "compilerOptions": { "noEmit": true, "typeRoots": ["./node_modules/@types", "./@types"] },
+  "extends": "@legendscribe/pokayoke/eslint-plugin/tsconfig",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "typeRoots": ["./node_modules/@types", "./@types"]
+  },
   "files": [],
   "exclude": ["node_modules", "dist", "coverage", "**/.*", "**/_*"]
 }

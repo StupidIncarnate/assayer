@@ -11,4 +11,4 @@
 import { z } from 'zod';
 import { Buffer } from 'buffer';
 
-export const bufferSchema = z.instanceof(Buffer).brand<'#GatewayBuffer'>();
+export const bufferSchema = z.instanceof(Buffer);

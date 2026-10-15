@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { lineEnrichmentContract } from './line-enrichment-contract';
 import type { LineEnrichment } from './line-enrichment-contract';

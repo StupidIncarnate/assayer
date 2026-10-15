@@ -7,9 +7,9 @@ describe('readFileBytes', () => {
     it('VALID: {path: existing binary file} => returns its raw bytes', async () => {
       const proxy = readFileBytesProxy();
       const bytes = new Uint8Array([137, 80, 78, 71]);
-      proxy.returns({ path: '/repo/.lockdown-kit-assets/step7.png', bytes });
+      proxy.returns({ path: '/repo/.pokayoke-assets/step7.png', bytes });
 
-      const result = await readFileBytes('/repo/.lockdown-kit-assets/step7.png');
+      const result = await readFileBytes('/repo/.pokayoke-assets/step7.png');
 
       expect(result).toStrictEqual(bytes);
     });
@@ -17,9 +17,9 @@ describe('readFileBytes', () => {
     it('EMPTY: {path: an empty file} => returns an empty byte array', async () => {
       const proxy = readFileBytesProxy();
       const bytes = new Uint8Array([]);
-      proxy.returns({ path: '/repo/.lockdown-kit-assets/empty.png', bytes });
+      proxy.returns({ path: '/repo/.pokayoke-assets/empty.png', bytes });
 
-      const result = await readFileBytes('/repo/.lockdown-kit-assets/empty.png');
+      const result = await readFileBytes('/repo/.pokayoke-assets/empty.png');
 
       expect(result).toStrictEqual(bytes);
     });
@@ -93,12 +93,12 @@ describe('readFileBytes', () => {
     it('VALID: {a real call already made} => getCallsFor reads it back', async () => {
       const proxy = readFileBytesProxy();
       const bytes = new Uint8Array([137, 80, 78, 71]);
-      proxy.returns({ path: '/repo/.lockdown-kit-assets/step7.png', bytes });
+      proxy.returns({ path: '/repo/.pokayoke-assets/step7.png', bytes });
 
-      await readFileBytes('/repo/.lockdown-kit-assets/step7.png');
+      await readFileBytes('/repo/.pokayoke-assets/step7.png');
 
-      expect(proxy.getCallsFor({ path: '/repo/.lockdown-kit-assets/step7.png' })).toStrictEqual([
-        ['/repo/.lockdown-kit-assets/step7.png'],
+      expect(proxy.getCallsFor({ path: '/repo/.pokayoke-assets/step7.png' })).toStrictEqual([
+        ['/repo/.pokayoke-assets/step7.png'],
       ]);
     });
   });

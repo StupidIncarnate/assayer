@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { zodIssueListContract } from './zod-issue-list-contract';
 import type { ZodIssueList } from './zod-issue-list-contract';

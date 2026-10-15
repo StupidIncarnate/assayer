@@ -1,6 +1,6 @@
 import { tailFile } from './tail-file';
 import { tailFileProxy } from './tail-file.proxy';
-import { registerSpyOn } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerSpyOn } from '@legendscribe/pokayoke/testing/register-mock';
 import { FileMissingErrorStub } from '../file-missing-error/file-missing-error.stub';
 import { FsErrorStub } from '../is-fs-error/fs-error.stub';
 

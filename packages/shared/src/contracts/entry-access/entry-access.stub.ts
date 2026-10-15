@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { entryAccessContract } from './entry-access-contract';
 import type { EntryAccess } from './entry-access-contract';

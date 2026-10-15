@@ -1,4 +1,4 @@
-import { registerMock } from '@legendscribe/lockdown-kit-testing/register-mock';
+import { registerMock } from '@legendscribe/pokayoke/testing/register-mock';
 
 import { externalSignatureReadDeclarationBroker } from '../read-declaration/external-signature-read-declaration-broker';
 import { externalSignatureReadDeclarationBrokerProxy } from '../read-declaration/external-signature-read-declaration-broker.proxy';

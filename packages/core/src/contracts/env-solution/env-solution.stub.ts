@@ -1,4 +1,4 @@
-import type { StubArgument } from '@legendscribe/lockdown-kit-shared/@types';
+import type { StubArgument } from '@legendscribe/pokayoke/shared/@types';
 
 import { envSolutionContract } from './env-solution-contract';
 import type { EnvSolution } from './env-solution-contract';
