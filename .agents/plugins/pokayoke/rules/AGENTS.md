@@ -112,7 +112,7 @@ Call both tools, read their output, THEN plan your approach.
 
 ## Ward Quality Commands
 
-**Every check runs through `npm run ward`** — never `npx jest`/`eslint`/`tsc`/`playwright` or `npm test`. Pick the scope below; see ward-discipline before a bare run.
+**Every check runs through `npm run ward`** — never `npx jest`/`eslint`/`tsc`/`playwright` or `npm test`. Check your work with `--files=`; see ward-discipline before any wider scope.
 
 ### Check Types
 
@@ -148,25 +148,25 @@ One scope per run. Each decides its own checks; no flag picks check types or fil
 
 ## Ward Invocation Discipline
 
-**Climb the ladder, narrowest first.** One change can break something you did not expect.
+**Check your work with `npm run ward -- --files=<every file you changed>`.** That is the whole check. It is not a ladder's first rung: once it exits 0, you are done.
 
-1. `npm run ward -- --files=<every file you changed>` — always first.
-2. `npm run ward -- --changed`
-3. `npm run ward -- --packages=<package>` when you own a package's work.
+**Run `--changed`, `--packages=` or a bare `npm run ward` only when:**
+1. the user, your orchestrator or your role document tells you to, or
+2. you are wrapping up, and the merge into another branch or worktree is yours.
 
-Run a bare `npm run ward` before a merge into the default branch, or when the user asks for one. Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
+Never widen the scope "to be safe" or "to finish up". Ward never emits into your source tree or your `dist`; a build is a separate command — see build-discipline.
 
 **Never `cd` into a package.** Ward runs from the root.
 
 **Run ward as one plain command and let it block, with `timeout: 600000`.** A hook refuses a pipe, redirect, `;`/`&&`, loop, `sleep`, `$VAR`/`$(...)`, glob, quote, prefix or background run, and any `cd` but `cd <absolute repo or worktree root> && ` first. Its output is sized for a context window: read it whole. A wide run outlives the timeout; background-tasks says what to do, never "end your turn".
 
-**Run it ONCE per tree state.** Never re-run unchanged state. A bare run's red costs a whole-repo run to confirm; `--files=` or `--packages=` costs only what you touched. Iterate there to exit 0, THEN one bare run as the regression pass. A type error in the typecheck gate blocks the rest: `build errored, could not proceed`.
+**Run it ONCE per tree state.** Never re-run unchanged state. Fix, then re-run the same `--files=` list until it exits 0. A wider run comes after that, once. A type error in the typecheck gate blocks the rest: `build errored, could not proceed`.
 
-**A change to a shared file** (harness, proxy, stub, helper) needs `--packages=` on every package that uses it: find them with `discover`.
+**A change to a shared file** (harness, proxy, stub, helper) can break tests you never ran. Add the test files of everything that uses it to your `--files=` list: find them with `discover`.
 
 **A skip on a scoped run is not a regression.** `No tests found` on a `--files=` run is a `skip`; full runs fail loudly. Never use `--passWithNoTests`. A `RAN ≠ EXPECTED` group is a real finding: investigate why ward found no check for those files.
 
-**Who owns a FULL run.** An agent working directly for the user makes a full `npm run ward` exit 0 and owns every failure in it, including ones it did not cause. An orchestrator-dispatched role never runs the full sweep; its Operating Rules name its rung, and the family's own `ward` step is the regression pass.
+**Who owns a FULL run.** An agent that runs one for the user makes a full `npm run ward` exit 0 and owns every failure in it, including ones it did not cause. An orchestrator-dispatched role never runs the full sweep; its Operating Rules name its rung, and the family's own `ward` step is the regression pass.
 
 ---
 
