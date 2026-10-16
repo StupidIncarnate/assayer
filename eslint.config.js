@@ -20,20 +20,20 @@ module.exports = [
     },
     {
         // manual-smoke-repo is fixture INPUT for Assayer's own compiler (a plain TS repo it analyzes).
-        ignores: ['manual-smoke-repo/**'],
+        ignores: ['manual-smoke-repo/**', '**/manual-smoke-repo/**'],
     },
     {
         // smoke-repo/ holds generated specimens, consumer code Assayer analyzes, for the same reason.
-        ignores: ['smoke-repo/**'],
+        ignores: ['smoke-repo/**', '**/smoke-repo/**'],
     },
     {
         // eslint-rules/ is Assayer's own local ESLint plugin; a lint rule fits no pokayoke folder type.
-        ignores: ['eslint-rules/**'],
+        ignores: ['eslint-rules/**', '**/eslint-rules/**'],
     },
     {
         // The specimen generator's declarations are consumer-shaped code with holes the rules forbid;
         // the generator typechecks every declaration itself when it loads them.
-        ignores: ['packages/specimen-generator/declarations/**'],
+        ignores: ['packages/specimen-generator/declarations/**', '**/packages/specimen-generator/declarations/**'],
     },
     {
         // Declaration files and hand-written type stubs sit outside every folder type.
